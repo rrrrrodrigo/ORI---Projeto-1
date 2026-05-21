@@ -1,0 +1,44 @@
+# Artefatos de compilação
+build/
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+
+# Arquivos de dados gerados
+data/*
+!data/.gitkeep
+
+# Cobertura de testes
+*.gcda
+*.gcno
+*.gcov
+coverage/
+
+# IDEs e editores
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Logs e temporários
+*.log
+*.tmp
+core
+core.*
+
+# Banco de dados de compilacao
+compile_commands.json
