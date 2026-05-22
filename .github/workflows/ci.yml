@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang-format cppcheck
+
+      - name: Check formatting
+        run: make format-check
+
+      - name: Build (debug)
+        run: make
+
+      - name: Run tests
+        run: make test
+
+      - name: Build with sanitizers and run tests
+        run: |
+          make clean
+          make test-asan
+
+      - name: Static analysis
+        run: make lint
+
+      - name: Build (release)
+        run: |
+          make clean
+          make release

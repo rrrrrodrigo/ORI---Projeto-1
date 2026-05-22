@@ -1,0 +1,11 @@
+{
+    "editor.formatOnSave": true,
+    "editor.rulers": [100],
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.default.cStandard": "c11",
+    "files.associations": {
+        "*.h": "c"
+    }
+}
