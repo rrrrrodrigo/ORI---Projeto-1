@@ -1,20 +1,102 @@
-Ana Clara Souza|F|11122233344|62.5|1.65|treinos_11122233344.dat
-Bruno Henrique Lima|M|22233344455|80.0|1.78|treinos_22233344455.dat
-Carla Mendes Rocha|F|33344455566|57.3|1.60|treinos_33344455566.dat
-Diego Ferreira Costa|M|44455566677|90.2|1.82|treinos_44455566677.dat
-Eduarda Pires Alves|F|55566677788|68.0|1.70|treinos_55566677788.dat
-Felipe Gomes Martins|M|66677788899|75.5|1.75|treinos_66677788899.dat
-Gabriela Torres Nunes|F|77788899900|54.8|1.58|treinos_77788899900.dat
-Henrique Bastos Dias|M|88899900011|85.3|1.80|treinos_88899900011.dat
-Isabela Cardoso Melo|F|99900011122|60.1|1.63|treinos_99900011122.dat
-Joao Pedro Ribeiro|M|00011122233|70.0|1.72|treinos_00011122233.dat
-Karina Oliveira Pereira|F|11223344556|65.9|1.67|treinos_11223344556.dat
-Lucas Araujo Vieira|M|22334455667|78.4|1.76|treinos_22334455667.dat
-Mariana Castro Silva|F|33445566778|55.2|1.61|treinos_33445566778.dat
-Nicolas Barros Teixeira|M|44556677889|92.0|1.85|treinos_44556677889.dat
-Olivia Nascimento Santos|F|55667788990|59.7|1.64|treinos_55667788990.dat
-Paulo Sergio Moreira|M|66778899001|83.6|1.79|treinos_66778899001.dat
-Queila Rodrigues Faria|F|77889900112|70.5|1.69|treinos_77889900112.dat
-Rafael Cunha Monteiro|M|88990011223|76.8|1.74|treinos_88990011223.dat
-Sabrina Lopes Guimaraes|F|99001122334|61.3|1.66|treinos_99001122334.dat
-Thiago Andrade Campos|M|00112233445|88.1|1.81|treinos_00112233445.dat
+NOME | SEXO | CPF | PESO | ALTURA | IDADE | TEMPO_TREINO (MESES) | BAIRRO (SÃO CARLOS) | NOME_ARQUIVO_TREINOS
+
+Ana Clara Souza|F|11122233344|62.5|1.65|24|8|Centro|treinos_11122233344.dat
+Bruno Henrique Lima|M|22233344455|80.0|1.78|31|36|Jardim Paulistano|treinos_22233344455.dat
+Carla Mendes Rocha|F|33344455566|57.3|1.60|22|5|Vila Prado|treinos_33344455566.dat
+Diego Ferreira Costa|M|44455566677|90.2|1.82|28|24|Santa Felicia|treinos_44455566677.dat
+Eduarda Pires Alves|F|55566677788|68.0|1.70|35|18|Cidade Aracy|treinos_55566677788.dat
+Felipe Gomes Martins|M|66677788899|75.5|1.75|27|12|Jardim Ricetti|treinos_66677788899.dat
+Gabriela Torres Nunes|F|77788899900|54.8|1.58|20|3|Centro|treinos_77788899900.dat
+Henrique Bastos Dias|M|88899900011|85.3|1.80|33|48|Jardim Paraiso|treinos_88899900011.dat
+Isabela Cardoso Melo|F|99900011122|60.1|1.63|26|9|Vila Nery|treinos_99900011122.dat
+Joao Pedro Ribeiro|M|00011122233|70.0|1.72|29|15|Santa Felicia|treinos_00011122233.dat
+Karina Oliveira Pereira|F|11223344556|65.9|1.67|32|30|Parque Arnold Schimidt|treinos_11223344556.dat
+Lucas Araujo Vieira|M|22334455667|78.4|1.76|25|20|Jardim Paulistano|treinos_22334455667.dat
+Mariana Castro Silva|F|33445566778|55.2|1.61|21|6|Vila Prado|treinos_33445566778.dat
+Nicolas Barros Teixeira|M|44556677889|92.0|1.85|38|60|Centro|treinos_44556677889.dat
+Olivia Nascimento Santos|F|55667788990|59.7|1.64|23|7|Cidade Aracy|treinos_55667788990.dat
+Paulo Sergio Moreira|M|66778899001|83.6|1.79|40|72|Santa Felicia|treinos_66778899001.dat
+Queila Rodrigues Faria|F|77889900112|70.5|1.69|30|22|Jardim Ricetti|treinos_77889900112.dat
+Rafael Cunha Monteiro|M|88990011223|76.8|1.74|34|40|Vila Nery|treinos_88990011223.dat
+Sabrina Lopes Guimaraes|F|99001122334|61.3|1.66|27|11|Jardim Paraiso|treinos_99001122334.dat
+Thiago Andrade Campos|M|00112233445|88.1|1.81|36|54|Parque Arnold Schimidt|treinos_00112233445.dat
+Beatriz Fonseca Lima|F|12233445566|58.0|1.62|22|4|Centro|treinos_12233445566.dat
+Caio Mendonca Prado|M|23344556677|77.0|1.77|26|16|Vila Prado|treinos_23344556677.dat
+Daniela Rocha Vieira|F|34455667788|63.4|1.66|29|25|Santa Felicia|treinos_34455667788.dat
+Eduardo Alves Souza|M|45566778899|82.5|1.80|31|33|Jardim Paulistano|treinos_45566778899.dat
+Fernanda Costa Melo|F|56677889900|55.9|1.59|20|2|Cidade Aracy|treinos_56677889900.dat
+Gustavo Nunes Barros|M|67788990011|79.3|1.74|28|19|Jardim Ricetti|treinos_67788990011.dat
+Helena Teixeira Ramos|F|78899001122|66.2|1.68|33|28|Centro|treinos_78899001122.dat
+Igor Santos Cunha|M|89900112233|91.0|1.83|37|50|Vila Nery|treinos_89900112233.dat
+Juliana Pereira Gomes|F|90011223344|59.0|1.63|24|10|Parque Arnold Schimidt|treinos_90011223344.dat
+Kevin Monteiro Dias|M|01122334455|74.6|1.73|22|6|Santa Felicia|treinos_01122334455.dat
+Larissa Campos Araujo|F|12344556678|61.8|1.65|27|14|Jardim Paraiso|treinos_12344556678.dat
+Matheus Guimaraes Lima|M|23455667789|86.0|1.82|30|35|Jardim Paulistano|treinos_23455667789.dat
+Natalia Moreira Faria|F|34566778890|53.7|1.58|21|3|Vila Prado|treinos_34566778890.dat
+Otavio Ribeiro Castro|M|45677889901|80.5|1.78|35|45|Centro|treinos_45677889901.dat
+Patricia Vieira Alves|F|56788990012|67.1|1.69|32|26|Cidade Aracy|treinos_56788990012.dat
+Renato Prado Oliveira|M|67899001123|75.0|1.75|29|21|Santa Felicia|treinos_67899001123.dat
+Simone Araujo Torres|F|78900112234|70.8|1.70|38|55|Jardim Ricetti|treinos_78900112234.dat
+Tiago Melo Nascimento|M|89001223345|93.0|1.86|40|65|Parque Arnold Schimidt|treinos_89001223345.dat
+Vanessa Dias Cardoso|F|90112334456|57.5|1.61|23|8|Vila Nery|treinos_90112334456.dat
+Wagner Cunha Bastos|M|01223445567|84.2|1.80|36|48|Jardim Paraiso|treinos_01223445567.dat
+Amanda Oliveira Cruz|F|11334556678|60.5|1.64|25|12|Centro|treinos_11334556678.dat
+Bernardo Lima Santos|M|22445667789|78.9|1.76|28|18|Vila Prado|treinos_22445667789.dat
+Claudia Santos Rocha|F|33556778890|64.3|1.67|34|38|Santa Felicia|treinos_33556778890.dat
+Danilo Ferreira Nunes|M|44667889901|88.7|1.84|31|30|Jardim Paulistano|treinos_44667889901.dat
+Elisa Gomes Pereira|F|55778990012|52.4|1.57|19|1|Cidade Aracy|treinos_55778990012.dat
+Fabio Alves Monteiro|M|66889001123|76.1|1.74|27|15|Jardim Ricetti|treinos_66889001123.dat
+Giovana Barros Vieira|F|77990112234|58.8|1.62|22|5|Centro|treinos_77990112234.dat
+Hiago Costa Ramos|M|88001223345|83.0|1.79|33|42|Vila Nery|treinos_88001223345.dat
+Ingrid Teixeira Melo|F|99112334456|66.7|1.68|29|20|Parque Arnold Schimidt|treinos_99112334456.dat
+Jonathas Prado Souza|M|00223445567|71.5|1.72|26|13|Santa Felicia|treinos_00223445567.dat
+Kelly Nunes Araujo|F|11445667789|63.9|1.66|30|24|Jardim Paraiso|treinos_11445667789.dat
+Leonardo Moreira Dias|M|22556778890|89.4|1.85|37|56|Jardim Paulistano|treinos_22556778890.dat
+Monica Ribeiro Lima|F|33667889901|56.1|1.60|21|4|Vila Prado|treinos_33667889901.dat
+Nelson Vieira Castro|M|44778990012|81.3|1.79|35|44|Centro|treinos_44778990012.dat
+Paloma Dias Faria|F|55889001123|68.5|1.70|28|17|Cidade Aracy|treinos_55889001123.dat
+Quirino Araujo Torres|M|66990112234|77.8|1.76|32|32|Santa Felicia|treinos_66990112234.dat
+Roberta Melo Oliveira|F|78001223346|61.0|1.64|24|9|Jardim Ricetti|treinos_78001223346.dat
+Samuel Cunha Gomes|M|89112334457|94.2|1.87|41|70|Parque Arnold Schimidt|treinos_89112334457.dat
+Tatiana Cruz Bastos|F|90223445568|59.3|1.63|27|11|Vila Nery|treinos_90223445568.dat
+Ursula Lima Cardoso|F|01334556679|72.0|1.71|36|46|Jardim Paraiso|treinos_01334556679.dat
+Vinicius Santos Ferreira|M|12445667780|80.7|1.78|30|27|Centro|treinos_12445667780.dat
+Wanessa Rocha Pereira|F|23556778891|54.6|1.58|20|3|Vila Prado|treinos_23556778891.dat
+Xavier Nunes Alves|M|34667889902|87.5|1.83|38|58|Santa Felicia|treinos_34667889902.dat
+Yasmin Gomes Monteiro|F|45778990013|62.7|1.65|23|7|Jardim Paulistano|treinos_45778990013.dat
+Zelma Barros Vieira|F|56889001124|69.4|1.69|33|35|Cidade Aracy|treinos_56889001124.dat
+Andre Teixeira Melo|M|67990112235|76.4|1.74|27|16|Jardim Ricetti|treinos_67990112235.dat
+Bianca Prado Ribeiro|F|79001223347|57.8|1.61|21|5|Centro|treinos_79001223347.dat
+Cesar Vieira Castro|M|90112334458|85.9|1.81|34|43|Vila Nery|treinos_90112334458.dat
+Denise Dias Araujo|F|01223445569|64.0|1.67|29|19|Parque Arnold Schimidt|treinos_01223445569.dat
+Evandro Melo Torres|M|12334556670|79.1|1.77|31|29|Santa Felicia|treinos_12334556670.dat
+Fatima Cruz Oliveira|F|23445667781|58.2|1.62|26|13|Jardim Paraiso|treinos_23445667781.dat
+Gilberto Lima Cunha|M|34556778892|82.8|1.80|35|47|Jardim Paulistano|treinos_34556778892.dat
+Heloisa Santos Gomes|F|45667889903|55.5|1.59|20|2|Vila Prado|treinos_45667889903.dat
+Ivan Rocha Ferreira|M|56778990014|90.6|1.84|39|62|Centro|treinos_56778990014.dat
+Jaqueline Nunes Bastos|F|67889001125|67.3|1.68|28|15|Cidade Aracy|treinos_67889001125.dat
+Kleber Gomes Cardoso|M|78990112236|74.9|1.73|32|31|Jardim Ricetti|treinos_78990112236.dat
+Leticia Barros Pereira|F|90001223348|60.8|1.64|23|8|Parque Arnold Schimidt|treinos_90001223348.dat
+Mauricio Teixeira Lima|M|01112334459|86.3|1.82|36|52|Vila Nery|treinos_01112334459.dat
+Noemia Vieira Rocha|F|12223445560|53.1|1.57|19|1|Santa Felicia|treinos_12223445560.dat
+Orlando Prado Alves|M|23334556671|78.0|1.76|30|23|Jardim Paraiso|treinos_23334556671.dat
+Priscila Melo Souza|F|34445667782|65.6|1.67|27|14|Jardim Paulistano|treinos_34445667782.dat
+Rodrigo Castro Ferreira|M|45556778893|91.5|1.85|40|66|Centro|treinos_45556778893.dat
+Sueli Dias Lima|F|56667889904|71.2|1.71|37|49|Vila Prado|treinos_56667889904.dat
+Thales Araujo Nunes|M|67778990015|77.3|1.75|28|18|Santa Felicia|treinos_67778990015.dat
+Ursula Cruz Torres|F|78889001126|59.9|1.63|25|10|Cidade Aracy|treinos_78889001126.dat
+Vagner Oliveira Cunha|M|89990112237|84.7|1.80|33|41|Jardim Ricetti|treinos_89990112237.dat
+Walkiria Lima Santos|F|91001223349|62.1|1.65|22|6|Parque Arnold Schimidt|treinos_91001223349.dat
+Xenofonte Rocha Dias|M|02112334450|80.2|1.78|31|28|Vila Nery|treinos_02112334450.dat
+Yolanda Nunes Melo|F|13223445561|56.7|1.60|20|3|Jardim Paraiso|treinos_13223445561.dat
+Zacarias Gomes Barros|M|24334556672|87.0|1.83|38|57|Jardim Paulistano|treinos_24334556672.dat
+Alessandra Vieira Faria|F|35445667783|63.6|1.66|26|12|Centro|treinos_35445667783.dat
+Benedito Teixeira Prado|M|46556778894|81.8|1.79|34|39|Santa Felicia|treinos_46556778894.dat
+Cintia Prado Ribeiro|F|57667889905|57.0|1.61|21|4|Cidade Aracy|treinos_57667889905.dat
+Dorival Melo Castro|M|68778990016|76.5|1.74|29|20|Jardim Ricetti|treinos_68778990016.dat
+Eliane Cruz Araujo|F|79889001127|64.8|1.67|32|27|Parque Arnold Schimidt|treinos_79889001127.dat
+Floriano Lima Torres|M|80990112238|89.9|1.84|40|63|Vila Nery|treinos_80990112238.dat
+Gisele Santos Oliveira|F|92001223340|58.5|1.62|24|9|Jardim Paraiso|treinos_92001223340.dat
+Horacio Rocha Cunha|M|03112334451|83.4|1.80|35|46|Jardim Paulistano|treinos_03112334451.dat
+Ivone Nunes Ferreira|F|14223445562|66.4|1.68|30|22|Vila Prado|treinos_14223445562.dat
+Joselito Gomes Bastos|M|25334556673|92.7|1.86|42|75|Centro|treinos_25334556673.dat
