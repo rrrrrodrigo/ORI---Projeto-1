@@ -7,9 +7,9 @@ disciplina de Organização e Recuperação de Informação (UFSCar).
 
 Implementação de baixo nível em C de estruturas de armazenamento em disco
 (Árvore B, PR-Quadtree) integradas em um sistema coeso de registro
-de treinos, perfis de usuários e busca de academias por geolocalização.
+de treinos, perfis de usuários.
 
-A ideia do projeto consiste fundamentalmente em um arquivo de dados contendo registros com informações (nome, gênero, carga máxima no supino, agachamento e puxada de frente, local onde mora, academias mais próximas) de vários usuários, com a presença de estruturas como uma Quadtree - dado o local onde um indivíduo mora, ela retornará as academias mais próximas em um raio específico -, além de árvores B - para realizar buscas referentes ao PR (Personal Record: carga máxima nos exercícios) das pessoas presentes nesse sistema de treinos. Assim, nosso código é capaz de aproximar os indivíduos que aguentam pesos parecidos nos exercícios e que moram relativamente perto uns dos outros, de modo que eles podem então ser parceiros de treino. O objetivo do projeto é desenvolver um sistema capaz de identificar possíveis parceiros de treino.
+A ideia do projeto consiste fundamentalmente em um arquivo contendo registros com informações de vários usuários, além de outros arquivos com os dados dos treinos de cada um deles, com a presença de árvores B - para realizar buscas referentes aos indivíduos presentes nesse sistema e buscar informações de seus treinos. Assim, nosso código se baseia em um mecanismo de armazenamento que permite acesso a um treino especifico que um dos usuários fez, numa data especifica, por exemplo. O objetivo do projeto é desenvolver um diário de treinamento para diversos indivíduos simultaneamente.
 
 ## Estrutura do repositório
 
