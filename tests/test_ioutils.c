@@ -24,11 +24,13 @@ static void rewind_tmp(void) {
     TEST_ASSERT_TRUE(io_seek(g_file, 0));
 }
 
+// cppcheck-suppress unusedFunction
 void setUp(void) {
     g_file = io_open(TMP_PATH, "w+b");
     TEST_ASSERT_NOT_NULL_MESSAGE(g_file, "falha ao abrir arquivo temporario");
 }
 
+// cppcheck-suppress unusedFunction
 void tearDown(void) {
     if (g_file != NULL) {
         io_close(g_file);
