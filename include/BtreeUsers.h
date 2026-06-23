@@ -3,9 +3,9 @@
 
 #include <stdio.h>
 
-#define ORDER       5                 // Grau mínimo da B-Tree
-#define MAX_KEYS    (2*ORDER - 1)     // Máximo de chaves por página
-#define MAX_CHILD   (2*ORDER)         // Máximo de filhos por página
+#define ORDER 5                  // Grau mínimo da B-Tree
+#define MAX_KEYS (2 * ORDER - 1) // Máximo de chaves por página
+#define MAX_CHILD (2 * ORDER)    // Máximo de filhos por página
 
 /* ============================================================
    REGISTRO DE USUÁRIO
@@ -14,15 +14,15 @@
    ============================================================ */
 
 typedef struct {
-    char  nome[70];
-    char  sexo;
-    char  CPF[12];               // 11 dígitos + '\0'
+    char nome[70];
+    char sexo;
+    char CPF[12]; // 11 dígitos + '\0'
     float peso;
     float altura;
-    int   idade;
-    int   tempoTreino;           // Tempo de treino em meses
-    char  localizacao[50];
-    char  arquivoTreino[30];     // Arquivo contendo os treinos do usuário
+    int idade;
+    int tempoTreino; // Tempo de treino em meses
+    char localizacao[50];
+    char arquivoTreino[30]; // Arquivo contendo os treinos do usuário
 } Usuario;
 
 /* ============================================================
@@ -37,11 +37,11 @@ typedef struct {
    ============================================================ */
 
 typedef struct {
-    int leaf;                    // 1 = folha, 0 = nó interno
-    int keyCount;                // Quantidade atual de chaves
-    long long key[MAX_KEYS];     // Chaves armazenadas
-    int dataPointers[MAX_KEYS];  // RRNs dos registros de usuário
-    int child[MAX_CHILD];        // RRNs das páginas-filhas
+    int leaf;                   // 1 = folha, 0 = nó interno
+    int keyCount;               // Quantidade atual de chaves
+    long long key[MAX_KEYS];    // Chaves armazenadas
+    int dataPointers[MAX_KEYS]; // RRNs dos registros de usuário
+    int child[MAX_CHILD];       // RRNs das páginas-filhas
 } BTreePage;
 
 /* ============================================================
@@ -59,7 +59,7 @@ typedef struct {
 /* ============================================================
    FUNÇÕES PRINCIPAIS DA B-TREE
    ============================================================ */
-   
+
 /*
  * Cria e inicializa uma B-Tree vazia.
  */
