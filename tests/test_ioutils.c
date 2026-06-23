@@ -81,8 +81,7 @@ void test_u32_roundtrip_extremes(void) {
 }
 
 void test_u64_roundtrip_extremes(void) {
-    const uint64_t vals[] = {
-        0u, 1u, 0xFFFFFFFFu, 0x0123456789ABCDEFu, 0x7FFFFFFFFFFFFFFFu, 0xFFFFFFFFFFFFFFFFu};
+    const uint64_t vals[] = {0u, 1u, 0xFFFFFFFFu, 0x0123456789ABCDEFu, 0x7FFFFFFFFFFFFFFFu, 0xFFFFFFFFFFFFFFFFu};
     for (size_t i = 0; i < sizeof vals / sizeof vals[0]; i++) {
         TEST_ASSERT_TRUE(io_write_u64(g_file, vals[i]));
     }
