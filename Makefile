@@ -141,6 +141,7 @@ lint:
 	}
 	@echo "Executando analise estatica..."
 	@cppcheck --enable=all --suppress=missingIncludeSystem \
+		--suppress=toomanyconfigs --suppress=checkersReport \
 		--inline-suppr --error-exitcode=1 \
 		-I$(INC_DIR) $(SRC_DIR) $(wildcard $(TEST_DIR)/*.c)
 
