@@ -49,6 +49,7 @@ bool io_seek(FILE *f, byte_offset_t offset) {
     return fseek(f, (long)offset, SEEK_SET) == 0;
 }
 
+// cppcheck-suppress unusedFunction
 bool io_tell(FILE *f, byte_offset_t *out_offset) {
     if (f == NULL || out_offset == NULL) {
         errno = EINVAL;

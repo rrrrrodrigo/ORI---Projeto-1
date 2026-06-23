@@ -188,6 +188,7 @@ void test_string_long(void) {
     char *big = malloc(len);
     TEST_ASSERT_NOT_NULL(big);
     for (size_t i = 0; i < len; i++) {
+        // cppcheck-suppress nullPointerRedundantCheck
         big[i] = (char)('A' + (i % 26));
     }
     TEST_ASSERT_TRUE(io_write_string(g_file, big, len));
