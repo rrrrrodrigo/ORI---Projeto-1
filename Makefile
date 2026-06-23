@@ -46,8 +46,13 @@ endif
 SRCS := $(wildcard $(SRC_DIR)/*.c)
 OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-TEST_SRCS := $(wildcard $(TEST_DIR)/*.c)
-TEST_BINS := $(TEST_SRCS:$(TEST_DIR)/%.c=$(BIN_DIR)/test_%)
+UNITY_TEST_SRCS := $(shell grep -rl '"unity/unity\.h"' $(wildcard $(TEST_DIR)/*.c) 2>/dev/null)
+UNITY_TEST_BINS := $(patsubst $(TEST_DIR)/%.c,$(BIN_DIR)/test_%,$(UNITY_TEST_SRCS))
+
+SIMPLE_TEST_SRCS := $(filter-out $(UNITY_TEST_SRCS),$(wildcard $(TEST_DIR)/*.c))
+SIMPLE_TEST_BINS := $(patsubst $(TEST_DIR)/%.c,$(BIN_DIR)/test_%,$(SIMPLE_TEST_SRCS))
+
+TEST_BINS := $(UNITY_TEST_BINS) $(SIMPLE_TEST_BINS)
 
 MAIN_BIN := $(BIN_DIR)/gymsocial
 
@@ -68,8 +73,13 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	@echo "  CC    $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# Compilação de cada teste (linkado com os objetos do src, exceto main.o)
-$(BIN_DIR)/test_%: $(TEST_DIR)/%.c $(filter-out $(OBJ_DIR)/main.o, $(OBJS)) | $(BIN_DIR)
+# Compilação de testes com Unity
+$(UNITY_TEST_BINS): $(BIN_DIR)/test_%: $(TEST_DIR)/%.c $(TEST_DIR)/unity/unity.c $(filter-out $(OBJ_DIR)/main.o,$(OBJS)) | $(BIN_DIR)
+	@echo "  LD    $@"
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+
+# Compilação de testes simples (sem Unity)
+$(SIMPLE_TEST_BINS): $(BIN_DIR)/test_%: $(TEST_DIR)/%.c $(filter-out $(OBJ_DIR)/main.o,$(OBJS)) | $(BIN_DIR)
 	@echo "  LD    $@"
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
@@ -131,8 +141,9 @@ lint:
 	}
 	@echo "Executando analise estatica..."
 	@cppcheck --enable=all --suppress=missingIncludeSystem \
+		--suppress=toomanyconfigs --suppress=checkersReport \
 		--inline-suppr --error-exitcode=1 \
-		-I$(INC_DIR) $(SRC_DIR) $(TEST_DIR)
+		-I$(INC_DIR) $(SRC_DIR) $(wildcard $(TEST_DIR)/*.c)
 
 .PHONY: compile-db
 compile-db:
