@@ -1,9 +1,9 @@
 /**
  * @file test_bptree.c
- * @brief Unity test suite for the generic B+ tree (bptree).
+ * @brief Suite de testes Unity para a árvore B+ genérica (bptree).
  *
- * All tests use uint32_t keys and bptree_cmp_u32.
- * No Sessao or Usuario types are involved here.
+ * Todos os testes usam chaves uint32_t e bptree_cmp_u32.
+ * Nenhum tipo Sessao ou Usuario está envolvido aqui.
  */
 
 #include "bptree.h"
@@ -18,7 +18,7 @@
 #include <unistd.h>
 
 /* ===================================================================== *
- *  Test infrastructure                                                  *
+ *  Infraestrutura de testes                                             *
  * ===================================================================== */
 
 static char tmp_path[256];
@@ -26,9 +26,9 @@ static bptree_t *bt = NULL;
 
 // cppcheck-suppress unusedFunction
 void setUp(void) {
-    /* Unique path per process (tests run serially under Unity). */
+    /* Caminho único por processo (testes executam em série sob o Unity). */
     snprintf(tmp_path, sizeof tmp_path, "/tmp/test_bptree_%d.idx", (int)getpid());
-    remove(tmp_path); /* clean slate */
+    remove(tmp_path); /* estado limpo */
     bt = bptree_open(tmp_path, sizeof(uint32_t), bptree_cmp_u32);
     TEST_ASSERT_NOT_NULL(bt);
 }
@@ -42,20 +42,20 @@ void tearDown(void) {
     remove(tmp_path);
 }
 
-/* Convenience: insert a plain uint32_t key with itself as value. */
+/* Auxiliar: insere uma chave uint32_t simples com ela mesma como valor. */
 static void insert_u32(uint32_t k) {
     bptree_val_t val = (bptree_val_t)k * 100u;
     TEST_ASSERT_TRUE(bptree_insert(bt, &k, val));
 }
 
-/* Convenience: assert a key is found with the expected value. */
+/* Auxiliar: verifica que uma chave é encontrada com o valor esperado. */
 static void assert_found(uint32_t k) {
     bptree_val_t out = 0;
-    TEST_ASSERT_TRUE_MESSAGE(bptree_search(bt, &k, &out), "key not found");
+    TEST_ASSERT_TRUE_MESSAGE(bptree_search(bt, &k, &out), "chave nao encontrada");
     TEST_ASSERT_EQUAL_UINT64((bptree_val_t)k * 100u, out);
 }
 
-/* Convenience: assert a key is absent (ENOENT). */
+/* Auxiliar: verifica que uma chave está ausente (ENOENT). */
 static void assert_absent(uint32_t k) {
     bptree_val_t out = 0;
     bool found = bptree_search(bt, &k, &out);
@@ -64,16 +64,16 @@ static void assert_absent(uint32_t k) {
 }
 
 /* ===================================================================== *
- *  Test 1: open creates a valid header                                  *
+ *  Teste 1: abertura cria cabeçalho válido                             *
  * ===================================================================== */
 
 void test_open_creates_valid_header(void) {
-    /* A fresh tree must survive bptree_verify. */
+    /* Uma árvore recém-criada deve passar em bptree_verify. */
     TEST_ASSERT_TRUE(bptree_verify(bt));
 }
 
 /* ===================================================================== *
- *  Test 2: insert 1 key and search finds it                            *
+ *  Teste 2: inserir 1 chave e a busca a encontra                       *
  * ===================================================================== */
 
 void test_insert_one_search_finds_it(void) {
@@ -87,11 +87,11 @@ void test_insert_one_search_finds_it(void) {
 }
 
 /* ===================================================================== *
- *  Test 3: insert 10 keys in a scrambled order, search all             *
+ *  Teste 3: inserir 10 chaves em ordem embaralhada, buscar todas       *
  * ===================================================================== */
 
 void test_insert_10_random_search_all(void) {
-    /* Scrambled manually so inserts hit different positions. */
+    /* Embaralhado manualmente para que as inserções atinjam posições diferentes. */
     const uint32_t keys[10] = {7, 3, 9, 1, 5, 0, 8, 4, 6, 2};
     for (int i = 0; i < 10; i++) {
         insert_u32(keys[i]);
@@ -103,7 +103,7 @@ void test_insert_10_random_search_all(void) {
 }
 
 /* ===================================================================== *
- *  Test 4: search for absent key returns false + ENOENT                *
+ *  Teste 4: busca por chave ausente retorna false + ENOENT             *
  * ===================================================================== */
 
 void test_search_absent_returns_enoent(void) {
@@ -113,15 +113,15 @@ void test_search_absent_returns_enoent(void) {
 }
 
 /* ===================================================================== *
- *  Test 5: insert exactly order keys (full root leaf), then 1 more to  *
- *          force a leaf split; verify passes both times.                *
+ *  Teste 5: inserir exatamente order chaves (folha raiz cheia), depois *
+ *           mais 1 para forçar divisão de folha; verify passa nas duas. *
  * ===================================================================== */
 
 void test_leaf_split_verify_passes(void) {
     /*
-     * The order for u32 keys is 313.
-     * Insert 313 keys to fill the root leaf, verify.
-     * Insert 1 more to force the split, verify.
+     * A ordem para chaves u32 é 313.
+     * Inserir 313 chaves para encher a folha raiz, verificar.
+     * Inserir mais 1 para forçar a divisão, verificar.
      */
     for (uint32_t i = 1u; i <= 313u; i++) {
         insert_u32(i);
@@ -131,32 +131,32 @@ void test_leaf_split_verify_passes(void) {
     insert_u32(314u);
     TEST_ASSERT_TRUE(bptree_verify(bt));
 
-    /* All keys still searchable. */
+    /* Todas as chaves ainda pesquisáveis. */
     for (uint32_t i = 1u; i <= 314u; i++) {
         assert_found(i);
     }
 }
 
 /* ===================================================================== *
- *  Test 6: insert order+1 keys → root splits → height becomes 2        *
+ *  Teste 6: inserir order+1 chaves → raiz divide → altura se torna 2  *
  * ===================================================================== */
 
 void test_root_split_height_2_verify(void) {
-    /* 314 inserts causes the single-leaf root to split:
-     * a new internal root is created, height = 2. */
+    /* 314 inserções fazem a raiz folha única dividir:
+     * uma nova raiz interna é criada, altura = 2. */
     for (uint32_t i = 1u; i <= 314u; i++) {
         insert_u32(i);
     }
     TEST_ASSERT_TRUE(bptree_verify(bt));
 
-    /* Spot-check a few keys. */
+    /* Verificação pontual de algumas chaves. */
     assert_found(1u);
     assert_found(157u);
     assert_found(314u);
 }
 
 /* ===================================================================== *
- *  Test 7: stress 10 000 ascending                                     *
+ *  Teste 7: estresse com 10 000 chaves em ordem crescente             *
  * ===================================================================== */
 
 void test_stress_10k_ascending_verify(void) {
@@ -170,7 +170,7 @@ void test_stress_10k_ascending_verify(void) {
 }
 
 /* ===================================================================== *
- *  Test 8: stress 10 000 descending                                    *
+ *  Teste 8: estresse com 10 000 chaves em ordem decrescente           *
  * ===================================================================== */
 
 void test_stress_10k_descending_verify(void) {
@@ -184,11 +184,11 @@ void test_stress_10k_descending_verify(void) {
 }
 
 /* ===================================================================== *
- *  Test 9: stress 10 000 random (LCG)                                  *
+ *  Teste 9: estresse com 10 000 chaves aleatórias (LCG)              *
  * ===================================================================== */
 
 void test_stress_10k_random_verify(void) {
-    /* LCG to get a deterministic but non-monotonic sequence. */
+    /* LCG para obter sequência determinística mas não-monotônica. */
     uint32_t seen[10000];
     uint32_t state = 0xDEADBEEFu;
     int n = 0;
@@ -196,7 +196,7 @@ void test_stress_10k_random_verify(void) {
     while (n < 10000) {
         state = state * 1664525u + 1013904223u;
         uint32_t k = (state % 100000u) + 1u;
-        /* Avoid duplicates (simple linear scan for small n). */
+        /* Evita duplicatas (varredura linear simples para n pequeno). */
         bool dup = false;
         for (int j = 0; j < n; j++) {
             if (seen[j] == k) {
@@ -218,7 +218,7 @@ void test_stress_10k_random_verify(void) {
 }
 
 /* ===================================================================== *
- *  Test 10: range scan [20..40] over keys 1..100 → exactly 21 results  *
+ *  Teste 10: varredura [20..40] sobre chaves 1..100 → exatos 21 result *
  * ===================================================================== */
 
 typedef struct {
@@ -245,14 +245,14 @@ void test_range_scan_20_to_40(void) {
     TEST_ASSERT_TRUE(bptree_range(bt, &lo, &hi, scan_collect, &sc));
     TEST_ASSERT_EQUAL_INT(21, sc.count);
 
-    /* Verify ascending order and correct values. */
+    /* Verifica ordem crescente e valores corretos. */
     for (int i = 0; i < 21; i++) {
         TEST_ASSERT_EQUAL_UINT32((uint32_t)(20 + i), sc.results[i]);
     }
 }
 
 /* ===================================================================== *
- *  Test 11: range with NULL min → returns all keys ≤ max               *
+ *  Teste 11: varredura com min NULL → retorna todas as chaves <= max   *
  * ===================================================================== */
 
 void test_range_open_min_null(void) {
@@ -270,7 +270,7 @@ void test_range_open_min_null(void) {
 }
 
 /* ===================================================================== *
- *  Test 12: range with NULL max → returns all keys ≥ min               *
+ *  Teste 12: varredura com max NULL → retorna todas as chaves >= min   *
  * ===================================================================== */
 
 void test_range_open_max_null(void) {
@@ -288,7 +288,7 @@ void test_range_open_max_null(void) {
 }
 
 /* ===================================================================== *
- *  Test 13: range early stop after 5 results                           *
+ *  Teste 13: varredura com parada antecipada após 5 resultados        *
  * ===================================================================== */
 
 typedef struct {
@@ -315,7 +315,7 @@ void test_range_early_stop(void) {
 }
 
 /* ===================================================================== *
- *  Test 14: delete existing key → search returns false + ENOENT        *
+ *  Teste 14: excluir chave existente → busca retorna false + ENOENT   *
  * ===================================================================== */
 
 void test_delete_existing_search_enoent(void) {
@@ -327,13 +327,13 @@ void test_delete_existing_search_enoent(void) {
     TEST_ASSERT_TRUE(bptree_delete(bt, &k));
     assert_absent(20u);
 
-    /* Neighbours still present. */
+    /* Vizinhos ainda presentes. */
     assert_found(10u);
     assert_found(30u);
 }
 
 /* ===================================================================== *
- *  Test 15: delete absent key returns false + ENOENT                   *
+ *  Teste 15: excluir chave ausente retorna false + ENOENT             *
  * ===================================================================== */
 
 void test_delete_absent_returns_enoent(void) {
@@ -345,7 +345,7 @@ void test_delete_absent_returns_enoent(void) {
 }
 
 /* ===================================================================== *
- *  Test 16: persistence — insert 500, close, reopen, search all        *
+ *  Teste 16: persistência — inserir 500, fechar, reabrir, buscar todas *
  * ===================================================================== */
 
 void test_persistence_500_keys(void) {
@@ -365,7 +365,7 @@ void test_persistence_500_keys(void) {
 }
 
 /* ===================================================================== *
- *  Test 17: TrainingKey comparator unit test                           *
+ *  Teste 17: teste unitário do comparador TrainingKey                 *
  * ===================================================================== */
 
 void test_training_key_comparator(void) {
@@ -373,27 +373,27 @@ void test_training_key_comparator(void) {
     TrainingKey b = {1u, 1u, 20240101u, 0u};
     TEST_ASSERT_EQUAL_INT(0, bptree_cmp_training(&a, &b));
 
-    /* id_usuario is primary. */
+    /* id_usuario é o campo primário. */
     b.id_usuario = 2u;
     TEST_ASSERT_TRUE(bptree_cmp_training(&a, &b) < 0);
     TEST_ASSERT_TRUE(bptree_cmp_training(&b, &a) > 0);
 
-    /* id_exercicio is secondary. */
+    /* id_exercicio é o campo secundário. */
     b = a;
     b.id_exercicio = 2u;
     TEST_ASSERT_TRUE(bptree_cmp_training(&a, &b) < 0);
 
-    /* data is tertiary. */
+    /* data é o campo terciário. */
     b = a;
     b.data = 20240102u;
     TEST_ASSERT_TRUE(bptree_cmp_training(&a, &b) < 0);
 
-    /* offset is the tiebreaker. */
+    /* offset é o desempatador. */
     b = a;
     b.offset = 1u;
     TEST_ASSERT_TRUE(bptree_cmp_training(&a, &b) < 0);
 
-    /* Primary field dominates even if all others differ. */
+    /* O campo primário domina mesmo que todos os outros difiram. */
     TrainingKey lo = {1u, 9u, 99999999u, 999u};
     TrainingKey hi = {2u, 0u, 0u, 0u};
     TEST_ASSERT_TRUE(bptree_cmp_training(&lo, &hi) < 0);

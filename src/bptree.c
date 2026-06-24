@@ -1,12 +1,12 @@
 /**
  * @file bptree.c
- * @brief Generic paginated B+ tree implementation (see bptree.h).
+ * @brief Implementação genérica e paginada da árvore B+ (veja bptree.h).
  *
- * Page layout and on-disk format: docs/data-structures.md.
+ * Layout das páginas e formato em disco: docs/data-structures.md.
  *
- * Deletion design note: bptree_delete uses tombstone-only logical deletion
- * and does NOT rebalance or merge nodes. Physical compaction is out of scope
- * for this phase. See docs/decisions.md for the rationale.
+ * Nota de projeto sobre exclusão: bptree_delete usa exclusão lógica apenas por
+ * tombstone e NÃO reequilibra nem mescla nós. A compactação física está fora do
+ * escopo desta fase. Consulte docs/decisions.md para a justificativa.
  */
 
 #include "bptree.h"
@@ -21,7 +21,7 @@
 #include <string.h>
 
 /* ===================================================================== *
- *  Constants                                                            *
+ *  Constantes                                                           *
  * ===================================================================== */
 
 #define HEADER_MAGIC "BPLI"
@@ -33,13 +33,13 @@
 #define TOMBSTONE_ACTIVE ((uint8_t)0x00)
 #define TOMBSTONE_DELETED ((uint8_t)0x01)
 
-/* Each value slot in a leaf: 1-byte tombstone + 8-byte offset (u64 LE). */
+/* Cada slot de valor em uma folha: 1 byte tombstone + 8 bytes de deslocamento (u64 LE). */
 #define VAL_SLOT_SIZE ((size_t)9)
 
-/* Maximum tree height supported by the fixed descent stack. */
+/* Altura máxima de árvore suportada pela pilha de descida de tamanho fixo. */
 #define BPTREE_MAX_HEIGHT 16
 
-/* Page 0 header field offsets. */
+/* Deslocamentos dos campos do cabeçalho na página 0. */
 #define HDR_OFF_MAGIC 0u
 #define HDR_OFF_VERSAO 4u
 #define HDR_OFF_ORDER 6u
@@ -47,20 +47,20 @@
 #define HDR_OFF_NUMKEYS 16u
 
 /* ===================================================================== *
- *  Opaque struct                                                        *
+ *  Struct opaco                                                         *
  * ===================================================================== */
 
 struct bptree {
     FILE *fp;
     size_t key_size;
     bptree_cmp_fn cmp;
-    uint16_t order; /* max keys per node */
+    uint16_t order; /* máximo de chaves por nó */
     uint64_t root_page;
-    uint64_t num_keys; /* active (non-tombstoned) entries */
+    uint64_t num_keys; /* entradas ativas (não marcadas com tombstone) */
 };
 
 /* ===================================================================== *
- *  Little-endian helpers (work directly on uint8_t page buffers)       *
+ *  Auxiliares little-endian (operam diretamente sobre buffers uint8_t) *
  * ===================================================================== */
 
 static inline uint16_t rd16(const uint8_t *p) {
@@ -87,10 +87,10 @@ static inline void wr64(uint8_t *p, uint64_t v) {
 }
 
 /* ===================================================================== *
- *  Page layout accessors                                                *
+ *  Acessores de layout de página                                        *
  * ===================================================================== */
 
-/* Keys start at byte 8 (after the 8-byte node header). */
+/* As chaves começam no byte 8 (após o cabeçalho de 8 bytes do nó). */
 static inline uint8_t *key_ptr(uint8_t *page, int i, size_t ksz) {
     return page + 8u + (size_t)i * ksz;
 }
@@ -100,8 +100,8 @@ static inline const uint8_t *key_ptr_c(const uint8_t *page, int i, size_t ksz) {
 }
 
 /*
- * Value slots section starts after ord * ksz bytes of keys.
- * Each slot is VAL_SLOT_SIZE (9) bytes: tombstone(u8) + offset(u64 LE).
+ * A seção de slots de valor começa após ord * ksz bytes de chaves.
+ * Cada slot ocupa VAL_SLOT_SIZE (9) bytes: tombstone(u8) + deslocamento(u64 LE).
  */
 static inline uint8_t *val_slot(uint8_t *page, int i, size_t ksz, uint16_t ord) {
     return page + 8u + (size_t)ord * ksz + (size_t)i * VAL_SLOT_SIZE;
@@ -111,7 +111,7 @@ static inline const uint8_t *val_slot_c(const uint8_t *page, int i, size_t ksz, 
     return page + 8u + (size_t)ord * ksz + (size_t)i * VAL_SLOT_SIZE;
 }
 
-/* next_leaf pointer: 8 bytes immediately after all value slots. */
+/* Ponteiro next_leaf: 8 bytes imediatamente após todos os slots de valor. */
 static inline uint64_t leaf_next_get(const uint8_t *page, size_t ksz, uint16_t ord) {
     return rd64(page + 8u + (size_t)ord * ksz + (size_t)ord * VAL_SLOT_SIZE);
 }
@@ -121,8 +121,8 @@ static inline void leaf_next_set(uint8_t *page, size_t ksz, uint16_t ord, uint64
 }
 
 /*
- * Internal node child pointers start after ord * ksz bytes of keys.
- * There are (ord + 1) child pointers, each 8 bytes.
+ * Ponteiros para filhos em nó interno começam após ord * ksz bytes de chaves.
+ * Há (ord + 1) ponteiros para filhos, cada um com 8 bytes.
  */
 static inline uint64_t child_get(const uint8_t *page, int i, size_t ksz, uint16_t ord) {
     return rd64(page + 8u + (size_t)ord * ksz + (size_t)i * 8u);
@@ -132,7 +132,7 @@ static inline void child_set(uint8_t *page, int i, size_t ksz, uint16_t ord, uin
     wr64(page + 8u + (size_t)ord * ksz + (size_t)i * 8u, pg);
 }
 
-/* Node header: type at [0], num_keys at [1..2]. */
+/* Cabeçalho do nó: tipo em [0], num_keys em [1..2]. */
 static inline uint8_t node_type(const uint8_t *page) {
     return page[0];
 }
@@ -147,12 +147,12 @@ static inline void node_set_nkeys(uint8_t *page, uint16_t n) {
 }
 
 /* ===================================================================== *
- *  Binary search                                                        *
+ *  Busca binária                                                        *
  * ===================================================================== */
 
 /*
- * Returns the first index i in [0, nk] such that keys[i] >= key.
- * Used in leaf nodes for exact-match position and insertion position.
+ * Retorna o primeiro índice i em [0, nk] tal que keys[i] >= key.
+ * Usado em nós folha para posição de correspondência exata e inserção.
  */
 static int lower_bound(const uint8_t *page, uint16_t nk, size_t ksz, bptree_cmp_fn cmp, const void *key) {
     int lo = 0, hi = (int)nk;
@@ -168,10 +168,10 @@ static int lower_bound(const uint8_t *page, uint16_t nk, size_t ksz, bptree_cmp_
 }
 
 /*
- * Returns the first index i in [0, nk] such that keys[i] > key.
- * Used in internal nodes for descent: separators are the minimum of the right
- * child, so we follow child[i] where i is the count of separators <= key.
- * This guarantees keys equal to a separator are routed to the right child.
+ * Retorna o primeiro índice i em [0, nk] tal que keys[i] > key.
+ * Usado em nós internos para descida: os separadores são o mínimo do filho
+ * direito, portanto seguimos child[i] onde i é a contagem de separadores <= key.
+ * Isso garante que chaves iguais a um separador sejam roteadas ao filho direito.
  */
 static int upper_bound(const uint8_t *page, uint16_t nk, size_t ksz, bptree_cmp_fn cmp, const void *key) {
     int lo = 0, hi = (int)nk;
@@ -187,13 +187,13 @@ static int upper_bound(const uint8_t *page, uint16_t nk, size_t ksz, bptree_cmp_
 }
 
 /* ===================================================================== *
- *  Order computation                                                    *
+ *  Cálculo da ordem                                                     *
  * ===================================================================== */
 
 static uint16_t compute_order(size_t key_size) {
-    /* Leaf: 8 hdr + ord*(ksz + VAL_SLOT_SIZE) + 8 next_leaf <= IO_PAGE_SIZE */
+    /* Folha: 8 hdr + ord*(ksz + VAL_SLOT_SIZE) + 8 next_leaf <= IO_PAGE_SIZE */
     size_t leaf_cap = (IO_PAGE_SIZE - 16u) / (key_size + VAL_SLOT_SIZE);
-    /* Internal: 8 hdr + ord*ksz + (ord+1)*8 <= IO_PAGE_SIZE
+    /* Interno: 8 hdr + ord*ksz + (ord+1)*8 <= IO_PAGE_SIZE
      *   => ord*(ksz+8) + 8 <= IO_PAGE_SIZE - 8
      *   => ord*(ksz+8) <= IO_PAGE_SIZE - 16                              */
     size_t int_cap = (IO_PAGE_SIZE - 16u) / (key_size + 8u);
@@ -201,7 +201,7 @@ static uint16_t compute_order(size_t key_size) {
 }
 
 /* ===================================================================== *
- *  Header I/O                                                           *
+ *  E/S do cabeçalho                                                     *
  * ===================================================================== */
 
 static bool write_header(bptree_t *bt) {
@@ -231,7 +231,7 @@ static bool read_header(bptree_t *bt) {
 }
 
 /* ===================================================================== *
- *  Page I/O                                                             *
+ *  E/S de página                                                        *
  * ===================================================================== */
 
 static bool read_node(bptree_t *bt, uint64_t pg, uint8_t *buf) {
@@ -242,7 +242,7 @@ static bool write_node(bptree_t *bt, uint64_t pg, const uint8_t *buf) {
     return io_write_page(bt->fp, pg, buf);
 }
 
-/* Appends a new page at end-of-file and returns its page number. */
+/* Adiciona uma nova página no final do arquivo e retorna seu número de página. */
 static bool alloc_node(bptree_t *bt, uint64_t *out_pg, const uint8_t *buf) {
     byte_offset_t sz;
     if (!io_file_size(bt->fp, &sz)) {
@@ -253,7 +253,7 @@ static bool alloc_node(bptree_t *bt, uint64_t *out_pg, const uint8_t *buf) {
 }
 
 /* ===================================================================== *
- *  Concrete comparators                                                 *
+ *  Comparadores concretos                                               *
  * ===================================================================== */
 
 int bptree_cmp_u32(const void *a, const void *b) {
@@ -334,7 +334,7 @@ bptree_t *bptree_open(const char *path, size_t key_size, bptree_cmp_fn cmp) {
             return NULL;
         }
 
-        /* Allocate root leaf (page 1): zeroed, type = NODE_LEAF */
+        /* Aloca a folha raiz (página 1): zerada, tipo = NODE_LEAF */
         uint8_t root_buf[IO_PAGE_SIZE];
         memset(root_buf, 0, sizeof root_buf);
         node_set_type(root_buf, NODE_LEAF);
@@ -355,7 +355,7 @@ bptree_t *bptree_open(const char *path, size_t key_size, bptree_cmp_fn cmp) {
             errno = saved;
             return NULL;
         }
-        /* key_size and cmp come from the caller; order from file. */
+        /* key_size e cmp vêm do chamador; order vem do arquivo. */
     }
 
     return bt;
@@ -413,12 +413,12 @@ bool bptree_search(bptree_t *bt, const void *key, bptree_val_t *out_val) {
 }
 
 /* ===================================================================== *
- *  bptree_insert — helpers                                              *
+ *  bptree_insert — auxiliares                                           *
  * ===================================================================== */
 
 /*
- * Copy a single leaf entry (key + val-slot) from src page index src_i
- * into dst page index dst_i.
+ * Copia uma entrada de folha (chave + slot de valor) do índice src_i da página
+ * src para o índice dst_i da página dst.
  */
 static void leaf_copy_entry(uint8_t *dst, int dst_i, const uint8_t *src, int src_i, size_t ksz, uint16_t ord) {
     memcpy(key_ptr(dst, dst_i, ksz), key_ptr_c(src, src_i, ksz), ksz);
@@ -426,8 +426,8 @@ static void leaf_copy_entry(uint8_t *dst, int dst_i, const uint8_t *src, int src
 }
 
 /*
- * Write a brand-new leaf entry (key from raw pointer, val, tombstone=active)
- * into dst page at index dst_i.
+ * Grava uma nova entrada de folha (chave por ponteiro bruto, val,
+ * tombstone=ativo) na página dst no índice dst_i.
  */
 static void leaf_write_entry(uint8_t *dst, int dst_i, const void *key, bptree_val_t val, size_t ksz, uint16_t ord) {
     memcpy(key_ptr(dst, dst_i, ksz), key, ksz);
@@ -437,7 +437,7 @@ static void leaf_write_entry(uint8_t *dst, int dst_i, const void *key, bptree_va
 }
 
 /* ===================================================================== *
- *  bptree_insert — split helpers                                        *
+ *  bptree_insert — auxiliares de divisão                               *
  * ===================================================================== */
 
 typedef struct {
@@ -446,21 +446,21 @@ typedef struct {
 } Frame;
 
 /*
- * Splits a full leaf (left_buf, order entries) by inserting (key, val) at
- * logical position pos (0..order).
+ * Divide uma folha cheia (left_buf, order entradas) inserindo (key, val) na
+ * posição lógica pos (0..order).
  *
- * After the call:
- *   left_buf  has mid entries,  its next_leaf points to right_page.
- *   right_buf has the remaining entries, its next_leaf is the old left next.
- *   sep_key   receives the first key of the right node (a copy, B+ tree rule).
+ * Após a chamada:
+ *   left_buf  tem mid entradas, seu next_leaf aponta para right_page.
+ *   right_buf tem as entradas restantes, seu next_leaf é o antigo next de left.
+ *   sep_key   recebe a primeira chave do nó direito (cópia — regra B+ tree).
  */
 static bool split_leaf(bptree_t *bt, uint8_t *left_buf, uint64_t left_pg, uint8_t *right_buf, uint64_t *right_pg, int pos, const void *key, bptree_val_t val, uint8_t *sep_key) {
     size_t ksz = bt->key_size;
     uint16_t ord = bt->order;
-    int total = (int)ord + 1; /* entries after insertion */
-    int mid = total / 2;      /* left keeps [0..mid-1] */
+    int total = (int)ord + 1; /* entradas após a inserção */
+    int mid = total / 2;      /* esquerda mantém [0..mid-1] */
 
-    /* Save old next_leaf before we zero right_buf. */
+    /* Salva o antigo next_leaf antes de zerar right_buf. */
     uint64_t old_next = leaf_next_get(left_buf, ksz, ord);
 
     memset(right_buf, 0, IO_PAGE_SIZE);
@@ -470,21 +470,21 @@ static bool split_leaf(bptree_t *bt, uint8_t *left_buf, uint64_t left_pg, uint8_
 
     if (pos < mid) {
         /*
-         * New entry goes into the left node.
-         * Right node gets old left[mid-1 .. ord-1].
+         * Nova entrada vai para o nó esquerdo.
+         * Nó direito recebe antigo left[mid-1 .. ord-1].
          */
         for (int j = 0; j < right_count; j++) {
             leaf_copy_entry(right_buf, j, left_buf, mid - 1 + j, ksz, ord);
         }
-        /* Shift left[pos .. mid-2] right by 1 to make room. */
+        /* Desloca left[pos .. mid-2] uma posição para a direita. */
         for (int i = mid - 1; i > pos; i--) {
             leaf_copy_entry(left_buf, i, left_buf, i - 1, ksz, ord);
         }
         leaf_write_entry(left_buf, pos, key, val, ksz, ord);
     } else {
         /*
-         * New entry goes into the right node.
-         * Left node stays unchanged (first mid entries).
+         * Nova entrada vai para o nó direito.
+         * Nó esquerdo permanece inalterado (primeiras mid entradas).
          */
         int adj = pos - mid;
         for (int j = 0; j < adj; j++) {
@@ -499,17 +499,17 @@ static bool split_leaf(bptree_t *bt, uint8_t *left_buf, uint64_t left_pg, uint8_
     node_set_nkeys(left_buf, (uint16_t)mid);
     node_set_nkeys(right_buf, (uint16_t)right_count);
 
-    /* Separator: first key of right node. */
+    /* Separador: primeira chave do nó direito. */
     memcpy(sep_key, key_ptr(right_buf, 0, ksz), ksz);
 
-    /* Fix next_leaf chain. */
+    /* Ajusta a cadeia next_leaf. */
     if (!alloc_node(bt, right_pg, right_buf)) {
         return false;
     }
     leaf_next_set(left_buf, ksz, ord, *right_pg);
     leaf_next_set(right_buf, ksz, ord, old_next);
 
-    /* Write right page (alloc_node already wrote it; rewrite with chain set). */
+    /* Reescreve a página direita (alloc_node já a gravou; reescrita com cadeia definida). */
     if (!write_node(bt, *right_pg, right_buf)) {
         return false;
     }
@@ -517,57 +517,53 @@ static bool split_leaf(bptree_t *bt, uint8_t *left_buf, uint64_t left_pg, uint8_
 }
 
 /*
- * Splits a full internal node (left_buf, order keys) by inserting
- * (sep_in, right_child) at position pos (0..order).
+ * Divide um nó interno cheio (left_buf, order chaves) inserindo
+ * (sep_in, right_child) na posição pos (0..order).
  *
- * The middle key is PROMOTED (not copied): it goes into sep_out for the
- * caller to push further up.  right_pg receives the new right internal page.
+ * A chave do meio é PROMOVIDA (não copiada): vai para sep_out para ser
+ * propagada pelo chamador. right_pg recebe a nova página interna direita.
  */
 static bool split_internal(bptree_t *bt, uint8_t *left_buf, uint64_t left_pg, uint8_t *right_buf, uint64_t *right_pg, int pos, const uint8_t *sep_in, uint64_t right_child_in, uint8_t *sep_out) {
     size_t ksz = bt->key_size;
     uint16_t ord = bt->order;
-    int total = (int)ord + 1; /* keys after insertion */
-    int mid = total / 2;      /* index of promoted key */
+    int total = (int)ord + 1; /* chaves após a inserção */
+    int mid = total / 2;      /* índice da chave promovida */
 
     /*
-     * Build the virtual sorted sequence of (total) keys and (total+1) children
-     * by conceptually inserting sep_in/right_child_in at position pos.
-     * We use a temporary staging in right_buf, then fix up left_buf.
+     * Constrói a sequência ordenada virtual de (total) chaves e (total+1) filhos
+     * inserindo conceitualmente sep_in/right_child_in na posição pos.
+     * Usamos right_buf como área de estágio temporária, depois corrigimos left_buf.
      */
 
     memset(right_buf, 0, IO_PAGE_SIZE);
     node_set_type(right_buf, NODE_INTERNAL);
 
     /*
-     * The promoted key is the one at virtual index mid.
-     * Left keeps virtual [0..mid-1], right keeps virtual [mid+1..total].
+     * A chave promovida é a de índice virtual mid.
+     * Esquerda mantém virtual [0..mid-1], direita mantém virtual [mid+1..total].
      */
 
-    /* Helper lambda: read key at virtual index vi */
-    /* (We implement this inline via the branch below.) */
-
-    /* Write the promoted separator. */
+    /* Grava o separador promovido. */
     if (pos == mid) {
         memcpy(sep_out, sep_in, ksz);
-        /* right child[0] = right_child_in; right keys = old[mid..ord-1] */
+        /* child[0] direito = right_child_in; chaves direitas = antigo[mid..ord-1] */
         child_set(right_buf, 0, ksz, ord, right_child_in);
         for (int j = 0; j < (int)ord - mid; j++) {
             memcpy(key_ptr(right_buf, j, ksz), key_ptr(left_buf, mid + j, ksz), ksz);
             child_set(right_buf, j + 1, ksz, ord, child_get(left_buf, mid + j + 1, ksz, ord));
         }
     } else if (pos < mid) {
-        /* Virtual: [0..pos-1]=old[0..pos-1], [pos]=new, [pos+1..total]=old[pos..] */
+        /* Virtual: [0..pos-1]=antigo[0..pos-1], [pos]=novo, [pos+1..total]=antigo[pos..] */
         memcpy(sep_out, key_ptr(left_buf, mid - 1, ksz), ksz);
 
-        /* right: virtual [mid..total] → old keys [mid-1..ord-1] shifted by insert */
-        /* right child[0] = old child[mid] (after insert shift) = old child[mid] */
+        /* direito: virtual [mid..total] → chaves antigas [mid-1..ord-1] com deslocamento */
         child_set(right_buf, 0, ksz, ord, child_get(left_buf, mid, ksz, ord));
         for (int j = 0; j < (int)ord - mid; j++) {
             memcpy(key_ptr(right_buf, j, ksz), key_ptr(left_buf, mid + j, ksz), ksz);
             child_set(right_buf, j + 1, ksz, ord, child_get(left_buf, mid + j + 1, ksz, ord));
         }
 
-        /* Fix left: insert sep_in at pos, shifting [pos..mid-2] right */
+        /* Corrige esquerdo: insere sep_in em pos, deslocando [pos..mid-2] para a direita */
         for (int i = mid - 1; i > pos; i--) {
             memcpy(key_ptr(left_buf, i, ksz), key_ptr(left_buf, i - 1, ksz), ksz);
             child_set(left_buf, i + 1, ksz, ord, child_get(left_buf, i, ksz, ord));
@@ -578,14 +574,12 @@ static bool split_internal(bptree_t *bt, uint8_t *left_buf, uint64_t left_pg, ui
         /* pos > mid */
         memcpy(sep_out, key_ptr(left_buf, mid, ksz), ksz);
 
-        /* right: virtual [mid+1..total] */
-        /* right_child[0] = old child[mid+1] */
-        /* But we need to insert sep_in at pos > mid in the right side. */
-        /* adj = pos - mid - 1 (position within right keys) */
+        /* direito: virtual [mid+1..total] */
+        /* adj = pos - mid - 1 (posição dentro das chaves do lado direito) */
         int adj = pos - mid - 1;
-        int right_keys = (int)ord - mid - 1; /* before insertion = ord - (mid+1) */
+        int right_keys = (int)ord - mid - 1; /* antes da inserção = ord - (mid+1) */
 
-        /* Build right keys/children from old left [mid+1..pos-1], new, old[pos..ord-1] */
+        /* Constrói chaves/filhos direitos a partir do antigo left [mid+1..pos-1], novo, antigo[pos..ord-1] */
         child_set(right_buf, 0, ksz, ord, child_get(left_buf, mid + 1, ksz, ord));
         for (int j = 0; j < adj; j++) {
             memcpy(key_ptr(right_buf, j, ksz), key_ptr(left_buf, mid + 1 + j, ksz), ksz);
@@ -627,7 +621,7 @@ bool bptree_insert(bptree_t *bt, const void *key, bptree_val_t val) {
     int depth = 0;
     uint64_t cur = bt->root_page;
 
-    /* ---- Descend to the target leaf ---- */
+    /* ---- Descer até a folha alvo ---- */
     for (;;) {
         if (!read_node(bt, cur, buf)) {
             return false;
@@ -644,13 +638,13 @@ bool bptree_insert(bptree_t *bt, const void *key, bptree_val_t val) {
     }
 
     uint64_t leaf_pg = cur;
-    /* buf holds the leaf. */
+    /* buf contém a folha. */
     uint16_t nk = node_nkeys(buf);
     int pos = lower_bound(buf, nk, bt->key_size, bt->cmp, key);
 
     if (nk < bt->order) {
-        /* ---- Simple insert into leaf with room ---- */
-        /* Shift keys right. */
+        /* ---- Inserção simples em folha com espaço ---- */
+        /* Desloca chaves para a direita. */
         for (int i = (int)nk; i > pos; i--) {
             leaf_copy_entry(buf, i, buf, i - 1, bt->key_size, bt->order);
         }
@@ -663,7 +657,7 @@ bool bptree_insert(bptree_t *bt, const void *key, bptree_val_t val) {
         return write_header(bt);
     }
 
-    /* ---- Leaf is full: split ---- */
+    /* ---- Folha cheia: dividir ---- */
     uint8_t right_buf[IO_PAGE_SIZE];
     uint64_t right_pg;
     uint8_t sep[BPTREE_MAX_KEY_SIZE];
@@ -673,7 +667,7 @@ bool bptree_insert(bptree_t *bt, const void *key, bptree_val_t val) {
     }
     bt->num_keys++;
 
-    /* ---- Push separator up through ancestor stack ---- */
+    /* ---- Propagar separador pela pilha de ancestrais ---- */
     uint64_t new_right = right_pg;
 
     while (depth > 0) {
@@ -688,7 +682,7 @@ bool bptree_insert(bptree_t *bt, const void *key, bptree_val_t val) {
         uint16_t par_nk = node_nkeys(par_buf);
 
         if (par_nk < bt->order) {
-            /* Room in parent: insert sep at par_slot, shift right. */
+            /* Pai tem espaço: inserir sep em par_slot, deslocar para a direita. */
             for (int i = (int)par_nk; i > par_slot; i--) {
                 memcpy(key_ptr(par_buf, i, bt->key_size), key_ptr(par_buf, i - 1, bt->key_size), bt->key_size);
                 child_set(par_buf, i + 1, bt->key_size, bt->order, child_get(par_buf, i, bt->key_size, bt->order));
@@ -702,7 +696,7 @@ bool bptree_insert(bptree_t *bt, const void *key, bptree_val_t val) {
             return write_header(bt);
         }
 
-        /* Parent also full: split internal node. */
+        /* Pai também cheio: dividir nó interno. */
         uint8_t par_right_buf[IO_PAGE_SIZE];
         uint64_t par_right_pg;
         uint8_t new_sep[BPTREE_MAX_KEY_SIZE];
@@ -714,7 +708,7 @@ bool bptree_insert(bptree_t *bt, const void *key, bptree_val_t val) {
         new_right = par_right_pg;
     }
 
-    /* ---- Root split: create new root ---- */
+    /* ---- Divisão da raiz: criar nova raiz ---- */
     uint8_t new_root_buf[IO_PAGE_SIZE];
     uint64_t new_root_pg;
     memset(new_root_buf, 0, sizeof new_root_buf);
@@ -727,7 +721,7 @@ bool bptree_insert(bptree_t *bt, const void *key, bptree_val_t val) {
     if (!alloc_node(bt, &new_root_pg, new_root_buf)) {
         return false;
     }
-    /* alloc_node already wrote new_root_buf; rewrite to be safe. */
+    /* alloc_node já gravou new_root_buf; reescreve por segurança. */
     if (!write_node(bt, new_root_pg, new_root_buf)) {
         return false;
     }
@@ -748,7 +742,7 @@ bool bptree_range(bptree_t *bt, const void *min, const void *max, bptree_scan_cb
     uint8_t buf[IO_PAGE_SIZE];
     uint64_t cur = bt->root_page;
 
-    /* ---- Descend to the starting leaf ---- */
+    /* ---- Descer até a folha inicial ---- */
     for (;;) {
         if (!read_node(bt, cur, buf)) {
             return false;
@@ -766,7 +760,7 @@ bool bptree_range(bptree_t *bt, const void *min, const void *max, bptree_scan_cb
         cur = child_get(buf, slot, bt->key_size, bt->order);
     }
 
-    /* ---- Walk the leaf chain ---- */
+    /* ---- Percorrer a cadeia de folhas ---- */
     while (cur != 0) {
         if (!read_node(bt, cur, buf)) {
             return false;
@@ -780,7 +774,7 @@ bool bptree_range(bptree_t *bt, const void *min, const void *max, bptree_scan_cb
                 continue;
             }
             if (max != NULL && bt->cmp(kp, max) > 0) {
-                return true; /* past upper bound, done */
+                return true; /* acima do limite superior, fim */
             }
 
             const uint8_t *vs = val_slot_c(buf, i, bt->key_size, bt->order);
@@ -790,7 +784,7 @@ bool bptree_range(bptree_t *bt, const void *min, const void *max, bptree_scan_cb
 
             bptree_val_t v = rd64(vs + 1);
             if (!cb(kp, v, ctx)) {
-                return true; /* early stop */
+                return true; /* parada antecipada */
             }
         }
 
@@ -849,7 +843,7 @@ bool bptree_delete(bptree_t *bt, const void *key) {
  *  bptree_print                                                         *
  * ===================================================================== */
 
-/* Simple BFS queue entry. */
+/* Entrada da fila BFS. */
 typedef struct {
     uint64_t pg;
     int level;
@@ -861,7 +855,7 @@ void bptree_print(const bptree_t *bt) {
         return;
     }
 
-    /* Fixed-size BFS queue (conservative upper bound). */
+    /* Fila BFS de tamanho fixo (limite superior conservador). */
     PrintEntry queue[8192];
     int qhead = 0, qtail = 0;
 
@@ -875,23 +869,23 @@ void bptree_print(const bptree_t *bt) {
         PrintEntry e = queue[qhead++];
 
         uint8_t buf[IO_PAGE_SIZE];
-        /* bptree_print is const but io_read_page needs non-const FILE*;
-         * the cast is intentional: we only read. */
+        /* bptree_print é const, mas io_read_page exige FILE* não-const;
+         * o cast é intencional: apenas lemos. */
         if (!io_read_page(bt->fp, e.pg, buf)) {
-            printf("  [error reading page %" PRIu64 "]\n", e.pg);
+            printf("  [erro ao ler pagina %" PRIu64 "]\n", e.pg);
             continue;
         }
 
         if (e.level != cur_level) {
             cur_level = e.level;
-            printf("=== Level %d ===\n", cur_level);
+            printf("=== Nivel %d ===\n", cur_level);
         }
 
         uint8_t type = node_type(buf);
         uint16_t nk = node_nkeys(buf);
-        const char *tname = (type == NODE_INTERNAL) ? "INTERNAL" : "LEAF";
+        const char *tname = (type == NODE_INTERNAL) ? "INTERNO" : "FOLHA";
 
-        printf("  [%s page=%" PRIu64 " nkeys=%u]", tname, e.pg, (unsigned)nk);
+        printf("  [%s pagina=%" PRIu64 " nchaves=%u]", tname, e.pg, (unsigned)nk);
 
         for (int i = 0; i < (int)nk; i++) {
             const uint8_t *kp = key_ptr_c(buf, i, bt->key_size);
@@ -900,7 +894,7 @@ void bptree_print(const bptree_t *bt) {
                 memcpy(&k, kp, sizeof k);
                 printf(" %u", k);
             } else {
-                /* Print raw hex for composite keys. */
+                /* Imprime hex bruto para chaves compostas. */
                 printf(" [");
                 for (size_t b = 0; b < bt->key_size; b++) {
                     printf("%02x", kp[b]);
@@ -927,7 +921,7 @@ void bptree_print(const bptree_t *bt) {
 typedef struct {
     uint64_t pg;
     int depth;
-    /* bounds propagated from parent: NULL = open */
+    /* limites propagados do pai: NULL = aberto */
     uint8_t lo[BPTREE_MAX_KEY_SIZE];
     bool has_lo;
     uint8_t hi[BPTREE_MAX_KEY_SIZE];
@@ -940,10 +934,10 @@ bool bptree_verify(const bptree_t *bt) {
     }
 
     uint64_t active_count = 0;
-    uint64_t leaf_pages_dfs[65536]; /* pages visited by DFS in order */
+    uint64_t leaf_pages_dfs[65536]; /* páginas visitadas pela DFS em ordem */
     int leaf_dfs_count = 0;
 
-    /* DFS stack */
+    /* Pilha DFS */
     VerifyFrame dfs_stack[BPTREE_MAX_HEIGHT * 512];
     int dfs_top = 0;
 
@@ -961,7 +955,7 @@ bool bptree_verify(const bptree_t *bt) {
 
         uint8_t buf[IO_PAGE_SIZE];
         if (!io_read_page(bt->fp, f.pg, buf)) {
-            printf("verify: cannot read page %" PRIu64 "\n", f.pg);
+            printf("verificar: nao foi possivel ler a pagina %" PRIu64 "\n", f.pg);
             return false;
         }
 
@@ -969,27 +963,27 @@ bool bptree_verify(const bptree_t *bt) {
         uint16_t nk = node_nkeys(buf);
         bool is_root = (f.pg == bt->root_page);
 
-        /* Minimum occupancy: non-root must have >= order/2 keys. */
+        /* Ocupação mínima: nó não-raiz deve ter >= order/2 chaves. */
         if (!is_root && nk < (uint16_t)(bt->order / 2u)) {
-            printf("verify: page %" PRIu64 " has %u keys < min %u\n", f.pg, (unsigned)nk, (unsigned)(bt->order / 2u));
+            printf("verificar: pagina %" PRIu64 " tem %u chaves < minimo %u\n", f.pg, (unsigned)nk, (unsigned)(bt->order / 2u));
             return false;
         }
 
-        /* Keys must be strictly sorted within the node. */
+        /* As chaves devem estar estritamente ordenadas dentro do nó. */
         for (int i = 1; i < (int)nk; i++) {
             if (bt->cmp(key_ptr_c(buf, i - 1, bt->key_size), key_ptr_c(buf, i, bt->key_size)) >= 0) {
-                printf("verify: page %" PRIu64 " keys not sorted at index %d\n", f.pg, i);
+                printf("verificar: pagina %" PRIu64 " chaves fora de ordem no indice %d\n", f.pg, i);
                 return false;
             }
         }
 
-        /* Bounds from parent. */
+        /* Limites do pai. */
         if (f.has_lo && nk > 0 && bt->cmp(key_ptr_c(buf, 0, bt->key_size), f.lo) < 0) {
-            printf("verify: page %" PRIu64 " first key below parent lower bound\n", f.pg);
+            printf("verificar: pagina %" PRIu64 " primeira chave abaixo do limite inferior do pai\n", f.pg);
             return false;
         }
         if (f.has_hi && nk > 0 && bt->cmp(key_ptr_c(buf, (int)nk - 1, bt->key_size), f.hi) > 0) {
-            printf("verify: page %" PRIu64 " last key above parent upper bound\n", f.pg);
+            printf("verificar: pagina %" PRIu64 " ultima chave acima do limite superior do pai\n", f.pg);
             return false;
         }
 
@@ -997,7 +991,7 @@ bool bptree_verify(const bptree_t *bt) {
             if (expected_leaf_depth < 0) {
                 expected_leaf_depth = f.depth;
             } else if (f.depth != expected_leaf_depth) {
-                printf("verify: leaf page %" PRIu64 " at depth %d, expected %d\n", f.pg, f.depth, expected_leaf_depth);
+                printf("verificar: folha %" PRIu64 " na profundidade %d, esperado %d\n", f.pg, f.depth, expected_leaf_depth);
                 return false;
             }
 
@@ -1005,17 +999,17 @@ bool bptree_verify(const bptree_t *bt) {
                 leaf_pages_dfs[leaf_dfs_count++] = f.pg;
             }
 
-            /* Count active entries. */
+            /* Conta entradas ativas. */
             for (int i = 0; i < (int)nk; i++) {
                 if (val_slot_c(buf, i, bt->key_size, bt->order)[0] == TOMBSTONE_ACTIVE) {
                     active_count++;
                 }
             }
         } else {
-            /* Internal: push children with updated bounds. */
+            /* Interno: empilha filhos com limites atualizados. */
             for (int i = (int)nk; i >= 0; i--) {
                 if (dfs_top >= (int)(sizeof dfs_stack / sizeof dfs_stack[0])) {
-                    printf("verify: DFS stack overflow\n");
+                    printf("verificar: estouro da pilha DFS\n");
                     return false;
                 }
                 VerifyFrame cf;
@@ -1023,7 +1017,7 @@ bool bptree_verify(const bptree_t *bt) {
                 cf.pg = child_get(buf, i, bt->key_size, bt->order);
                 cf.depth = f.depth + 1;
 
-                /* Lower bound for child[i]: key[i-1] of this node (if i>0). */
+                /* Limite inferior para child[i]: key[i-1] deste nó (se i>0). */
                 if (i > 0) {
                     cf.has_lo = true;
                     memcpy(cf.lo, key_ptr_c(buf, i - 1, bt->key_size), bt->key_size);
@@ -1034,7 +1028,7 @@ bool bptree_verify(const bptree_t *bt) {
                     }
                 }
 
-                /* Upper bound for child[i]: key[i] of this node (if i<nk). */
+                /* Limite superior para child[i]: key[i] deste nó (se i<nk). */
                 if (i < (int)nk) {
                     cf.has_hi = true;
                     memcpy(cf.hi, key_ptr_c(buf, i, bt->key_size), bt->key_size);
@@ -1050,23 +1044,23 @@ bool bptree_verify(const bptree_t *bt) {
         }
     }
 
-    /* Verify active entry count matches header. */
+    /* Verifica se a contagem de entradas ativas corresponde ao cabeçalho. */
     if (active_count != bt->num_keys) {
-        printf("verify: header num_keys=%" PRIu64 " but counted %" PRIu64 " active entries\n", bt->num_keys, active_count);
+        printf("verificar: cabecalho num_keys=%" PRIu64 " mas contagem encontrou %" PRIu64 " entradas ativas\n", bt->num_keys, active_count);
         return false;
     }
 
-    /* Verify leaf chain matches DFS order. */
+    /* Verifica se a cadeia de folhas corresponde à ordem da DFS. */
     uint64_t chain_pg = (leaf_dfs_count > 0) ? leaf_pages_dfs[0] : 0;
     int chain_i = 0;
 
     while (chain_pg != 0) {
         if (chain_i >= leaf_dfs_count) {
-            printf("verify: leaf chain longer than DFS leaf list\n");
+            printf("verificar: cadeia de folhas mais longa que a lista DFS de folhas\n");
             return false;
         }
         if (chain_pg != leaf_pages_dfs[chain_i]) {
-            printf("verify: leaf chain page %" PRIu64 " != DFS leaf[%d]=%" PRIu64 "\n", chain_pg, chain_i, leaf_pages_dfs[chain_i]);
+            printf("verificar: pagina na cadeia %" PRIu64 " != DFS folha[%d]=%" PRIu64 "\n", chain_pg, chain_i, leaf_pages_dfs[chain_i]);
             return false;
         }
         chain_i++;
@@ -1079,7 +1073,7 @@ bool bptree_verify(const bptree_t *bt) {
     }
 
     if (chain_i != leaf_dfs_count) {
-        printf("verify: leaf chain has %d nodes, DFS found %d\n", chain_i, leaf_dfs_count);
+        printf("verificar: cadeia de folhas tem %d nos, DFS encontrou %d\n", chain_i, leaf_dfs_count);
         return false;
     }
 
