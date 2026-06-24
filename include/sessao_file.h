@@ -33,18 +33,18 @@ typedef struct {
 } Serie;
 
 typedef struct {
-    uint32_t  id_exercicio;
-    char     *observacao;  /* alocado no heap; liberado por sessao_free */
-    uint16_t  num_series;
-    Serie    *series;      /* array alocado no heap; liberado por sessao_free */
+    uint32_t id_exercicio;
+    char *observacao; /* alocado no heap; liberado por sessao_free */
+    uint16_t num_series;
+    Serie *series; /* array alocado no heap; liberado por sessao_free */
 } Exercicio;
 
 typedef struct {
-    uint32_t   id_usuario;
-    uint32_t   data;         /* YYYYMMDD */
-    uint32_t   id_academia;  /* 0 = não informado */
-    uint16_t   num_exercicios;
-    Exercicio *exercicios;   /* array alocado no heap; liberado por sessao_free */
+    uint32_t id_usuario;
+    uint32_t data;        /* YYYYMMDD */
+    uint32_t id_academia; /* 0 = não informado */
+    uint16_t num_exercicios;
+    Exercicio *exercicios; /* array alocado no heap; liberado por sessao_free */
 } Sessao;
 
 /**
@@ -66,8 +66,7 @@ typedef struct sessao_file sessao_file_t;
  * Retorne true para continuar, false para parar o scan (early-stop).
  * O módulo libera *s após o retorno do callback.
  */
-typedef bool (*sessao_scan_cb)(byte_offset_t offset, const Sessao *s,
-                               void *ctx);
+typedef bool (*sessao_scan_cb)(byte_offset_t offset, const Sessao *s, void *ctx);
 
 /**
  * Abre (ou cria) o arquivo de sessões em `path`.
@@ -90,8 +89,7 @@ bool sessao_file_close(sessao_file_t *sf);
  * *out_offset recebe o offset do início do registro (pode ser NULL).
  * Falha com EINVAL se sf == NULL ou s == NULL.
  */
-bool sessao_file_insert(sessao_file_t *sf, const Sessao *s,
-                        byte_offset_t *out_offset);
+bool sessao_file_insert(sessao_file_t *sf, const Sessao *s, byte_offset_t *out_offset);
 
 /**
  * Lê a sessão no offset dado e preenche *out.

@@ -21,10 +21,10 @@
  *  Constantes internas                                                  *
  * ===================================================================== */
 
-#define HEADER_SIZE    32u
-#define HEADER_MAGIC   "GYMS"
-#define HEADER_VERSAO  1u
-#define STATUS_ACTIVE  ((uint8_t)0x00)
+#define HEADER_SIZE 32u
+#define HEADER_MAGIC "GYMS"
+#define HEADER_VERSAO 1u
+#define STATUS_ACTIVE ((uint8_t)0x00)
 #define STATUS_DELETED ((uint8_t)0x01)
 
 /* Offsets dentro do cabeçalho (todos em bytes a partir do início do arquivo). */
@@ -36,7 +36,7 @@
  * ===================================================================== */
 
 struct sessao_file {
-    FILE    *fp;
+    FILE *fp;
     uint32_t num_registros; /* registros ativos */
     uint32_t num_deletados; /* registros logicamente deletados */
 };
@@ -83,8 +83,7 @@ static bool read_header(sessao_file_t *sf) {
     if (!io_read_exact(sf->fp, magic, 4)) {
         return false;
     }
-    if (magic[0] != 'G' || magic[1] != 'Y' || magic[2] != 'M' ||
-        magic[3] != 'S') {
+    if (magic[0] != 'G' || magic[1] != 'Y' || magic[2] != 'M' || magic[3] != 'S') {
         errno = EPROTO;
         return false;
     }
@@ -131,10 +130,7 @@ static bool read_payload(FILE *fp, Sessao *out) {
     out->exercicios = NULL;
     out->num_exercicios = 0;
 
-    if (!io_read_u32(fp, &out->id_usuario) ||
-        !io_read_u32(fp, &out->data) ||
-        !io_read_u32(fp, &out->id_academia) ||
-        !io_read_u16(fp, &out->num_exercicios)) {
+    if (!io_read_u32(fp, &out->id_usuario) || !io_read_u32(fp, &out->data) || !io_read_u32(fp, &out->id_academia) || !io_read_u16(fp, &out->num_exercicios)) {
         return false;
     }
 
@@ -142,8 +138,7 @@ static bool read_payload(FILE *fp, Sessao *out) {
         return true;
     }
 
-    out->exercicios =
-        calloc((size_t)out->num_exercicios, sizeof(Exercicio));
+    out->exercicios = calloc((size_t)out->num_exercicios, sizeof(Exercicio));
     if (out->exercicios == NULL) {
         errno = ENOMEM;
         return false;
@@ -153,9 +148,7 @@ static bool read_payload(FILE *fp, Sessao *out) {
     for (uint32_t i = 0; i < num_ex; i++) {
         Exercicio *ex = &out->exercicios[i];
 
-        if (!io_read_u32(fp, &ex->id_exercicio) ||
-            !io_read_string(fp, &ex->observacao, NULL) ||
-            !io_read_u16(fp, &ex->num_series)) {
+        if (!io_read_u32(fp, &ex->id_exercicio) || !io_read_string(fp, &ex->observacao, NULL) || !io_read_u16(fp, &ex->num_series)) {
             goto fail;
         }
 
@@ -163,8 +156,7 @@ static bool read_payload(FILE *fp, Sessao *out) {
             continue;
         }
 
-        ex->series =
-            malloc((size_t)ex->num_series * sizeof(Serie));
+        ex->series = malloc((size_t)ex->num_series * sizeof(Serie));
         if (ex->series == NULL) {
             errno = ENOMEM;
             goto fail;
@@ -172,49 +164,40 @@ static bool read_payload(FILE *fp, Sessao *out) {
 
         uint32_t num_ser = ex->num_series;
         for (uint32_t j = 0; j < num_ser; j++) {
-            if (!io_read_u32(fp, &ex->series[j].carga_g) ||
-                !io_read_u16(fp, &ex->series[j].repeticoes)) {
+            if (!io_read_u32(fp, &ex->series[j].carga_g) || !io_read_u16(fp, &ex->series[j].repeticoes)) {
                 goto fail;
             }
         }
     }
     return true;
 
-fail:
-    {
-        int saved = errno;
-        sessao_free(out);
-        errno = saved;
-        return false;
-    }
+fail: {
+    int saved = errno;
+    sessao_free(out);
+    errno = saved;
+    return false;
+}
 }
 
 /* Grava o payload de *s em fp.
  * Não aloca memória; só lê os campos de s. */
 static bool write_payload(FILE *fp, const Sessao *s) {
-    if (!io_write_u32(fp, s->id_usuario) ||
-        !io_write_u32(fp, s->data) ||
-        !io_write_u32(fp, s->id_academia) ||
-        !io_write_u16(fp, s->num_exercicios)) {
+    if (!io_write_u32(fp, s->id_usuario) || !io_write_u32(fp, s->data) || !io_write_u32(fp, s->id_academia) || !io_write_u16(fp, s->num_exercicios)) {
         return false;
     }
 
     uint32_t num_ex = s->num_exercicios;
     for (uint32_t i = 0; i < num_ex; i++) {
         const Exercicio *ex = &s->exercicios[i];
-        size_t obs_len =
-            (ex->observacao != NULL) ? strlen(ex->observacao) : 0;
+        size_t obs_len = (ex->observacao != NULL) ? strlen(ex->observacao) : 0;
 
-        if (!io_write_u32(fp, ex->id_exercicio) ||
-            !io_write_string(fp, ex->observacao, obs_len) ||
-            !io_write_u16(fp, ex->num_series)) {
+        if (!io_write_u32(fp, ex->id_exercicio) || !io_write_string(fp, ex->observacao, obs_len) || !io_write_u16(fp, ex->num_series)) {
             return false;
         }
 
         uint32_t num_ser = ex->num_series;
         for (uint32_t j = 0; j < num_ser; j++) {
-            if (!io_write_u32(fp, ex->series[j].carga_g) ||
-                !io_write_u16(fp, ex->series[j].repeticoes)) {
+            if (!io_write_u32(fp, ex->series[j].carga_g) || !io_write_u16(fp, ex->series[j].repeticoes)) {
                 return false;
             }
         }
@@ -290,8 +273,7 @@ bool sessao_file_close(sessao_file_t *sf) {
     return ok;
 }
 
-bool sessao_file_insert(sessao_file_t *sf, const Sessao *s,
-                        byte_offset_t *out_offset) {
+bool sessao_file_insert(sessao_file_t *sf, const Sessao *s, byte_offset_t *out_offset) {
     if (sf == NULL || s == NULL) {
         errno = EINVAL;
         return false;
@@ -361,8 +343,7 @@ bool sessao_file_insert(sessao_file_t *sf, const Sessao *s,
     return true;
 }
 
-bool sessao_file_read_at(sessao_file_t *sf, byte_offset_t offset,
-                         Sessao *out) {
+bool sessao_file_read_at(sessao_file_t *sf, byte_offset_t offset, Sessao *out) {
     if (sf == NULL || out == NULL) {
         errno = EINVAL;
         return false;
@@ -477,8 +458,7 @@ bool sessao_file_scan(sessao_file_t *sf, sessao_scan_cb cb, void *ctx) {
 
         if (status != STATUS_ACTIVE) {
             /* deletado: pula o payload */
-            byte_offset_t skip_to =
-                record_offset + 1u + 4u + (byte_offset_t)tam_dados;
+            byte_offset_t skip_to = record_offset + 1u + 4u + (byte_offset_t)tam_dados;
             if (!io_seek(sf->fp, skip_to)) {
                 return false;
             }

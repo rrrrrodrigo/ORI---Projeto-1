@@ -36,8 +36,7 @@ void tearDown(void) {
  * ===================================================================== */
 
 /* Sessão mínima: 1 exercício, 2 séries, observação não vazia. */
-static void fill_simple_sessao(Sessao *s, Serie *series_buf,
-                                Exercicio *ex_buf) {
+static void fill_simple_sessao(Sessao *s, Serie *series_buf, Exercicio *ex_buf) {
     series_buf[0].carga_g = 80000u;
     series_buf[0].repeticoes = 10u;
     series_buf[1].carga_g = 100000u;
@@ -56,8 +55,7 @@ static void fill_simple_sessao(Sessao *s, Serie *series_buf,
 }
 
 /* Lê num_registros e num_deletados do cabeçalho diretamente do arquivo raw. */
-static void read_header_raw(const char *path, uint32_t *num_reg,
-                             uint32_t *num_del) {
+static void read_header_raw(const char *path, uint32_t *num_reg, uint32_t *num_del) {
     FILE *f = io_open(path, "rb");
     TEST_ASSERT_NOT_NULL(f);
     TEST_ASSERT_TRUE(io_seek(f, 8)); /* offset de num_registros */
@@ -85,8 +83,7 @@ static bool scan_count_cb(byte_offset_t offset, const Sessao *s, void *ctx) {
     return true;
 }
 
-static bool scan_stop_after_one_cb(byte_offset_t offset, const Sessao *s,
-                                   void *ctx) {
+static bool scan_stop_after_one_cb(byte_offset_t offset, const Sessao *s, void *ctx) {
     (void)offset;
     (void)s;
     int *calls = (int *)ctx;
@@ -267,14 +264,12 @@ void test_insert_read_at_multiple_exercises(void) {
 
     /* exercício 1: observação com espaços */
     TEST_ASSERT_EQUAL_UINT32(2u, s_out.exercicios[1].id_exercicio);
-    TEST_ASSERT_EQUAL_STRING("observacao com espacos",
-                             s_out.exercicios[1].observacao);
+    TEST_ASSERT_EQUAL_STRING("observacao com espacos", s_out.exercicios[1].observacao);
     TEST_ASSERT_EQUAL_UINT16(3u, s_out.exercicios[1].num_series);
 
     /* exercício 2: observação longa, 0 séries */
     TEST_ASSERT_EQUAL_UINT32(3u, s_out.exercicios[2].id_exercicio);
-    TEST_ASSERT_EQUAL_UINT16(100u,
-                             (uint16_t)strlen(s_out.exercicios[2].observacao));
+    TEST_ASSERT_EQUAL_UINT16(100u, (uint16_t)strlen(s_out.exercicios[2].observacao));
     TEST_ASSERT_EQUAL_UINT16(0u, s_out.exercicios[2].num_series);
     TEST_ASSERT_NULL(s_out.exercicios[2].series);
 
