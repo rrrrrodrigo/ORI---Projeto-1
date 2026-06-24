@@ -113,8 +113,7 @@ typedef bool (*bptree_scan_cb)(const void *key, bptree_val_t val, void *ctx);
  * min or max may be NULL (open-ended range).
  * Fails with EINVAL if bt==NULL or cb==NULL.
  */
-bool bptree_range(bptree_t *bt, const void *min, const void *max,
-                  bptree_scan_cb cb, void *ctx);
+bool bptree_range(bptree_t *bt, const void *min, const void *max, bptree_scan_cb cb, void *ctx);
 
 /**
  * Logical deletion: marks the leaf entry as deleted (tombstone byte).

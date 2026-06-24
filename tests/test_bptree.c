@@ -6,9 +6,9 @@
  * No Sessao or Usuario types are involved here.
  */
 
-#include "unity/unity.h"
 #include "bptree.h"
 #include "ioutils.h"
+#include "unity/unity.h"
 
 #include <errno.h>
 #include <stdint.h>
@@ -21,21 +21,18 @@
  *  Test infrastructure                                                  *
  * ===================================================================== */
 
-static char    tmp_path[256];
+static char tmp_path[256];
 static bptree_t *bt = NULL;
 
-void setUp(void)
-{
+void setUp(void) {
     /* Unique path per process (tests run serially under Unity). */
-    snprintf(tmp_path, sizeof tmp_path, "/tmp/test_bptree_%d.idx",
-             (int)getpid());
+    snprintf(tmp_path, sizeof tmp_path, "/tmp/test_bptree_%d.idx", (int)getpid());
     remove(tmp_path); /* clean slate */
     bt = bptree_open(tmp_path, sizeof(uint32_t), bptree_cmp_u32);
     TEST_ASSERT_NOT_NULL(bt);
 }
 
-void tearDown(void)
-{
+void tearDown(void) {
     if (bt != NULL) {
         bptree_close(bt);
         bt = NULL;
@@ -44,23 +41,20 @@ void tearDown(void)
 }
 
 /* Convenience: insert a plain uint32_t key with itself as value. */
-static void insert_u32(uint32_t k)
-{
+static void insert_u32(uint32_t k) {
     bptree_val_t val = (bptree_val_t)k * 100u;
     TEST_ASSERT_TRUE(bptree_insert(bt, &k, val));
 }
 
 /* Convenience: assert a key is found with the expected value. */
-static void assert_found(uint32_t k)
-{
+static void assert_found(uint32_t k) {
     bptree_val_t out = 0;
     TEST_ASSERT_TRUE_MESSAGE(bptree_search(bt, &k, &out), "key not found");
     TEST_ASSERT_EQUAL_UINT64((bptree_val_t)k * 100u, out);
 }
 
 /* Convenience: assert a key is absent (ENOENT). */
-static void assert_absent(uint32_t k)
-{
+static void assert_absent(uint32_t k) {
     bptree_val_t out = 0;
     bool found = bptree_search(bt, &k, &out);
     TEST_ASSERT_FALSE(found);
@@ -71,8 +65,7 @@ static void assert_absent(uint32_t k)
  *  Test 1: open creates a valid header                                  *
  * ===================================================================== */
 
-void test_open_creates_valid_header(void)
-{
+void test_open_creates_valid_header(void) {
     /* A fresh tree must survive bptree_verify. */
     TEST_ASSERT_TRUE(bptree_verify(bt));
 }
@@ -81,8 +74,7 @@ void test_open_creates_valid_header(void)
  *  Test 2: insert 1 key and search finds it                            *
  * ===================================================================== */
 
-void test_insert_one_search_finds_it(void)
-{
+void test_insert_one_search_finds_it(void) {
     uint32_t k = 42u;
     bptree_val_t val = 9999u;
     TEST_ASSERT_TRUE(bptree_insert(bt, &k, val));
@@ -96,8 +88,7 @@ void test_insert_one_search_finds_it(void)
  *  Test 3: insert 10 keys in a scrambled order, search all             *
  * ===================================================================== */
 
-void test_insert_10_random_search_all(void)
-{
+void test_insert_10_random_search_all(void) {
     /* Scrambled manually so inserts hit different positions. */
     uint32_t keys[10] = {7, 3, 9, 1, 5, 0, 8, 4, 6, 2};
     for (int i = 0; i < 10; i++) {
@@ -113,8 +104,7 @@ void test_insert_10_random_search_all(void)
  *  Test 4: search for absent key returns false + ENOENT                *
  * ===================================================================== */
 
-void test_search_absent_returns_enoent(void)
-{
+void test_search_absent_returns_enoent(void) {
     insert_u32(1u);
     insert_u32(2u);
     assert_absent(99u);
@@ -125,8 +115,7 @@ void test_search_absent_returns_enoent(void)
  *          force a leaf split; verify passes both times.                *
  * ===================================================================== */
 
-void test_leaf_split_verify_passes(void)
-{
+void test_leaf_split_verify_passes(void) {
     /*
      * The order for u32 keys is 313.
      * Insert 313 keys to fill the root leaf, verify.
@@ -150,8 +139,7 @@ void test_leaf_split_verify_passes(void)
  *  Test 6: insert order+1 keys → root splits → height becomes 2        *
  * ===================================================================== */
 
-void test_root_split_height_2_verify(void)
-{
+void test_root_split_height_2_verify(void) {
     /* 314 inserts causes the single-leaf root to split:
      * a new internal root is created, height = 2. */
     for (uint32_t i = 1u; i <= 314u; i++) {
@@ -169,8 +157,7 @@ void test_root_split_height_2_verify(void)
  *  Test 7: stress 10 000 ascending                                     *
  * ===================================================================== */
 
-void test_stress_10k_ascending_verify(void)
-{
+void test_stress_10k_ascending_verify(void) {
     for (uint32_t i = 1u; i <= 10000u; i++) {
         insert_u32(i);
     }
@@ -184,8 +171,7 @@ void test_stress_10k_ascending_verify(void)
  *  Test 8: stress 10 000 descending                                    *
  * ===================================================================== */
 
-void test_stress_10k_descending_verify(void)
-{
+void test_stress_10k_descending_verify(void) {
     for (uint32_t i = 10000u; i >= 1u; i--) {
         insert_u32(i);
     }
@@ -199,12 +185,11 @@ void test_stress_10k_descending_verify(void)
  *  Test 9: stress 10 000 random (LCG)                                  *
  * ===================================================================== */
 
-void test_stress_10k_random_verify(void)
-{
+void test_stress_10k_random_verify(void) {
     /* LCG to get a deterministic but non-monotonic sequence. */
     uint32_t seen[10000];
     uint32_t state = 0xDEADBEEFu;
-    int      n     = 0;
+    int n = 0;
 
     while (n < 10000) {
         state = state * 1664525u + 1013904223u;
@@ -212,9 +197,13 @@ void test_stress_10k_random_verify(void)
         /* Avoid duplicates (simple linear scan for small n). */
         bool dup = false;
         for (int j = 0; j < n; j++) {
-            if (seen[j] == k) { dup = true; break; }
+            if (seen[j] == k) {
+                dup = true;
+                break;
+            }
         }
-        if (dup) continue;
+        if (dup)
+            continue;
         seen[n++] = k;
         insert_u32(k);
     }
@@ -232,11 +221,10 @@ void test_stress_10k_random_verify(void)
 
 typedef struct {
     uint32_t results[128];
-    int      count;
+    int count;
 } ScanCtx;
 
-static bool scan_collect(const void *key, bptree_val_t val, void *ctx)
-{
+static bool scan_collect(const void *key, bptree_val_t val, void *ctx) {
     ScanCtx *sc = (ScanCtx *)ctx;
     uint32_t k;
     memcpy(&k, key, sizeof k);
@@ -245,14 +233,13 @@ static bool scan_collect(const void *key, bptree_val_t val, void *ctx)
     return true;
 }
 
-void test_range_scan_20_to_40(void)
-{
+void test_range_scan_20_to_40(void) {
     for (uint32_t i = 1u; i <= 100u; i++) {
         insert_u32(i);
     }
 
     uint32_t lo = 20u, hi = 40u;
-    ScanCtx sc = { .count = 0 };
+    ScanCtx sc = {.count = 0};
     TEST_ASSERT_TRUE(bptree_range(bt, &lo, &hi, scan_collect, &sc));
     TEST_ASSERT_EQUAL_INT(21, sc.count);
 
@@ -266,14 +253,13 @@ void test_range_scan_20_to_40(void)
  *  Test 11: range with NULL min → returns all keys ≤ max               *
  * ===================================================================== */
 
-void test_range_open_min_null(void)
-{
+void test_range_open_min_null(void) {
     for (uint32_t i = 1u; i <= 10u; i++) {
         insert_u32(i);
     }
 
     uint32_t hi = 5u;
-    ScanCtx sc  = { .count = 0 };
+    ScanCtx sc = {.count = 0};
     TEST_ASSERT_TRUE(bptree_range(bt, NULL, &hi, scan_collect, &sc));
     TEST_ASSERT_EQUAL_INT(5, sc.count);
     for (int i = 0; i < 5; i++) {
@@ -285,14 +271,13 @@ void test_range_open_min_null(void)
  *  Test 12: range with NULL max → returns all keys ≥ min               *
  * ===================================================================== */
 
-void test_range_open_max_null(void)
-{
+void test_range_open_max_null(void) {
     for (uint32_t i = 1u; i <= 10u; i++) {
         insert_u32(i);
     }
 
     uint32_t lo = 7u;
-    ScanCtx sc  = { .count = 0 };
+    ScanCtx sc = {.count = 0};
     TEST_ASSERT_TRUE(bptree_range(bt, &lo, NULL, scan_collect, &sc));
     TEST_ASSERT_EQUAL_INT(4, sc.count);
     for (int i = 0; i < 4; i++) {
@@ -309,8 +294,7 @@ typedef struct {
     int count;
 } EarlyStopCtx;
 
-static bool scan_early_stop(const void *key, bptree_val_t val, void *ctx)
-{
+static bool scan_early_stop(const void *key, bptree_val_t val, void *ctx) {
     EarlyStopCtx *ec = (EarlyStopCtx *)ctx;
     (void)key;
     (void)val;
@@ -318,13 +302,12 @@ static bool scan_early_stop(const void *key, bptree_val_t val, void *ctx)
     return ec->count < ec->limit;
 }
 
-void test_range_early_stop(void)
-{
+void test_range_early_stop(void) {
     for (uint32_t i = 1u; i <= 100u; i++) {
         insert_u32(i);
     }
 
-    EarlyStopCtx ec = { .limit = 5, .count = 0 };
+    EarlyStopCtx ec = {.limit = 5, .count = 0};
     TEST_ASSERT_TRUE(bptree_range(bt, NULL, NULL, scan_early_stop, &ec));
     TEST_ASSERT_EQUAL_INT(5, ec.count);
 }
@@ -333,8 +316,7 @@ void test_range_early_stop(void)
  *  Test 14: delete existing key → search returns false + ENOENT        *
  * ===================================================================== */
 
-void test_delete_existing_search_enoent(void)
-{
+void test_delete_existing_search_enoent(void) {
     insert_u32(10u);
     insert_u32(20u);
     insert_u32(30u);
@@ -352,8 +334,7 @@ void test_delete_existing_search_enoent(void)
  *  Test 15: delete absent key returns false + ENOENT                   *
  * ===================================================================== */
 
-void test_delete_absent_returns_enoent(void)
-{
+void test_delete_absent_returns_enoent(void) {
     insert_u32(1u);
     uint32_t missing = 999u;
     bool ok = bptree_delete(bt, &missing);
@@ -365,8 +346,7 @@ void test_delete_absent_returns_enoent(void)
  *  Test 16: persistence — insert 500, close, reopen, search all        *
  * ===================================================================== */
 
-void test_persistence_500_keys(void)
-{
+void test_persistence_500_keys(void) {
     for (uint32_t i = 1u; i <= 500u; i++) {
         insert_u32(i);
     }
@@ -386,8 +366,7 @@ void test_persistence_500_keys(void)
  *  Test 17: TrainingKey comparator unit test                           *
  * ===================================================================== */
 
-void test_training_key_comparator(void)
-{
+void test_training_key_comparator(void) {
     TrainingKey a = {1u, 1u, 20240101u, 0u};
     TrainingKey b = {1u, 1u, 20240101u, 0u};
     TEST_ASSERT_EQUAL_INT(0, bptree_cmp_training(&a, &b));
@@ -414,7 +393,7 @@ void test_training_key_comparator(void)
 
     /* Primary field dominates even if all others differ. */
     TrainingKey lo = {1u, 9u, 99999999u, 999u};
-    TrainingKey hi = {2u, 0u, 0u,        0u};
+    TrainingKey hi = {2u, 0u, 0u, 0u};
     TEST_ASSERT_TRUE(bptree_cmp_training(&lo, &hi) < 0);
 }
 
@@ -422,8 +401,7 @@ void test_training_key_comparator(void)
  *  main                                                                 *
  * ===================================================================== */
 
-int main(void)
-{
+int main(void) {
     UNITY_BEGIN();
 
     RUN_TEST(test_open_creates_valid_header);
