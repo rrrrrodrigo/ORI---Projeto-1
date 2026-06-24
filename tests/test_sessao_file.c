@@ -167,6 +167,7 @@ void test_open_rejects_wrong_magic(void) {
     TEST_ASSERT_TRUE(io_close(f));
 
     errno = 0;
+    // cppcheck-suppress constVariablePointer
     sessao_file_t *const sf = sessao_file_open(TMP_PATH);
     TEST_ASSERT_NULL(sf);
     TEST_ASSERT_EQUAL_INT(EPROTO, errno);
