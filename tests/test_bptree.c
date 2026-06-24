@@ -24,6 +24,7 @@
 static char tmp_path[256];
 static bptree_t *bt = NULL;
 
+// cppcheck-suppress unusedFunction
 void setUp(void) {
     /* Unique path per process (tests run serially under Unity). */
     snprintf(tmp_path, sizeof tmp_path, "/tmp/test_bptree_%d.idx", (int)getpid());
@@ -32,6 +33,7 @@ void setUp(void) {
     TEST_ASSERT_NOT_NULL(bt);
 }
 
+// cppcheck-suppress unusedFunction
 void tearDown(void) {
     if (bt != NULL) {
         bptree_close(bt);
@@ -90,7 +92,7 @@ void test_insert_one_search_finds_it(void) {
 
 void test_insert_10_random_search_all(void) {
     /* Scrambled manually so inserts hit different positions. */
-    uint32_t keys[10] = {7, 3, 9, 1, 5, 0, 8, 4, 6, 2};
+    const uint32_t keys[10] = {7, 3, 9, 1, 5, 0, 8, 4, 6, 2};
     for (int i = 0; i < 10; i++) {
         insert_u32(keys[i]);
     }

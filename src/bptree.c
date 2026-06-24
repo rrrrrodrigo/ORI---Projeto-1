@@ -243,7 +243,7 @@ static bool write_node(bptree_t *bt, uint64_t pg, const uint8_t *buf) {
 }
 
 /* Appends a new page at end-of-file and returns its page number. */
-static bool alloc_node(bptree_t *bt, uint64_t *out_pg, uint8_t *buf) {
+static bool alloc_node(bptree_t *bt, uint64_t *out_pg, const uint8_t *buf) {
     byte_offset_t sz;
     if (!io_file_size(bt->fp, &sz)) {
         return false;
@@ -855,6 +855,7 @@ typedef struct {
     int level;
 } PrintEntry;
 
+// cppcheck-suppress unusedFunction
 void bptree_print(const bptree_t *bt) {
     if (bt == NULL) {
         return;
