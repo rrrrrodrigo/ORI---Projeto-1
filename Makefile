@@ -1,7 +1,7 @@
 # Compilador e flags
 CC := gcc
 CSTD := -std=c11
-WARNINGS := -Wall -Wextra -Wpedantic -Wshadow -Wstrict-prototypes
+WARNINGS := -Wall -Wextra -Wpedantic -Wshadow -Wstrict-prototypes -Wconversion
 DEBUG_FLAGS := -g -O0 -DDEBUG
 RELEASE_FLAGS := -O2 -DNDEBUG
 SANITIZE_FLAGS := -fsanitize=address,undefined -fno-omit-frame-pointer
