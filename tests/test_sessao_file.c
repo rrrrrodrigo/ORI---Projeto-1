@@ -21,12 +21,10 @@ static const char *TMP_PATH = "build/test_sessao_tmp.dat";
  *  setUp / tearDown                                                     *
  * ===================================================================== */
 
-// cppcheck-suppress unusedFunction
 void setUp(void) {
     remove(TMP_PATH);
 }
 
-// cppcheck-suppress unusedFunction
 void tearDown(void) {
     remove(TMP_PATH);
 }
@@ -169,7 +167,7 @@ void test_open_rejects_wrong_magic(void) {
     TEST_ASSERT_TRUE(io_close(f));
 
     errno = 0;
-    sessao_file_t *sf = sessao_file_open(TMP_PATH);
+    sessao_file_t *const sf = sessao_file_open(TMP_PATH);
     TEST_ASSERT_NULL(sf);
     TEST_ASSERT_EQUAL_INT(EPROTO, errno);
 }
@@ -199,14 +197,22 @@ void test_insert_read_at_roundtrip(void) {
     TEST_ASSERT_EQUAL_UINT16(1u, s_out.num_exercicios);
 
     TEST_ASSERT_NOT_NULL(s_out.exercicios);
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_EQUAL_UINT32(7u, s_out.exercicios[0].id_exercicio);
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_EQUAL_STRING("pegada larga", s_out.exercicios[0].observacao);
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_EQUAL_UINT16(2u, s_out.exercicios[0].num_series);
 
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_NOT_NULL(s_out.exercicios[0].series);
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_EQUAL_UINT32(80000u, s_out.exercicios[0].series[0].carga_g);
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_EQUAL_UINT16(10u, s_out.exercicios[0].series[0].repeticoes);
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_EQUAL_UINT32(100000u, s_out.exercicios[0].series[1].carga_g);
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_EQUAL_UINT16(8u, s_out.exercicios[0].series[1].repeticoes);
 
     sessao_free(&s_out);
@@ -256,7 +262,9 @@ void test_insert_read_at_multiple_exercises(void) {
     TEST_ASSERT_NOT_NULL(s_out.exercicios);
 
     /* exercício 0: observação vazia */
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_EQUAL_UINT32(1u, s_out.exercicios[0].id_exercicio);
+    // cppcheck-suppress nullPointerRedundantCheck
     TEST_ASSERT_NOT_NULL(s_out.exercicios[0].observacao);
     TEST_ASSERT_EQUAL_STRING("", s_out.exercicios[0].observacao);
     TEST_ASSERT_EQUAL_UINT16(1u, s_out.exercicios[0].num_series);
